@@ -699,7 +699,7 @@ function buildFromRows(rows,opt){
         else{
           var p=provs[pi];
           // Aturan di Excel: nama sama = satu station code. Kalau ada lebih dari satu, pilih yang provinsinya sama.
-          var cand=stations.concat(batch).filter(function(x){var m=SCRE.exec(x.station_code);return m&&typeOf(m)===jt&&norm(x.site_name)===norm(site)});
+          var cand=stations.concat(batch).filter(function(x){var m=SCRE.exec(x.station_code);return m&&typeOf(m)===jt&&(norm(x.site_name)===norm(site)||(x.project_name&&norm(x.project_name)===norm(site)))});
           var ex=cand.filter(function(x){return SCRE.exec(x.station_code)[2].toUpperCase()===p[2]}).pop()||cand.pop();
           if(ex){
             s.station_code=ex.station_code;s.profit_center=ex.profit_center;note="Sudah ada";
@@ -1158,7 +1158,7 @@ function renderDash(){
   var n=stations.length,ev=0,bs=0,byP={},byE={},mis=0,misBy={},cnt={},nm={};
   byC={};
   stations.forEach(function(s){
-    var m=SCRE.exec(s.station_code),j=m?typeOf(m):"";
+    var m=SCRE.exec(s.station_code),j=m?typeOf(m):(/^L\.E\./i.test(s.station_code)?"EVCS":(/^B\./i.test(s.station_code)?"BSS":""));
     if(j==="BSS")bs++;else if(j==="EVCS")ev++;
     var pi=provIdx(s.provinsi),pn=pi>=0?provs[pi][0]:"Tidak dikenali";
     var o=byP[pn]||(byP[pn]={e:0,b:0});if(j==="BSS")o.b++;else o.e++;
