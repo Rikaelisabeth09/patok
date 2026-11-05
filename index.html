@@ -186,6 +186,7 @@ table.hd td.blk{padding-left:8mm}
       <button data-v="dash" class="on">Dashboard</button>
       <button data-v="wo">Surat WO</button>
       <button data-v="sap">Kode SAP</button>
+      <button data-v="cari">Cari station</button>
       <button data-v="fix">Koreksi provinsi</button>
       <button data-v="hist">Riwayat<span class="badge hide" id="navBadge"></span></button>
     </nav>
@@ -256,7 +257,7 @@ table.hd td.blk{padding-left:8mm}
       <input id="rvAlasan" placeholder="Alasan jika tidak sesuai (wajib)" style="margin-top:8px">
     </div>
     <div class="row" style="margin-bottom:10px"><button id="allOk">Tandai semua sesuai</button><button class="main" id="gen">Buat surat</button></div>
-    <div class="tbl"><table class="t"><thead><tr><th>No</th><th>Vendor</th><th>WO</th><th>Site</th><th>Station code</th><th>Profit center</th><th>Kode</th><th>Kota</th><th>Cek lokasi</th><th>Alasan jika tidak sesuai</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="tbl"><table class="t"><thead><tr><th>No</th><th>Vendor</th><th>WO</th><th>Site</th><th>Jenis</th><th>Station code</th><th>Profit center</th><th>Kode</th><th>Kota</th><th>Cek lokasi</th><th>Alasan jika tidak sesuai</th></tr></thead><tbody id="rows"></tbody></table></div>
     <div id="err" class="msg err hide"></div>
   </div>
 </section>
@@ -291,6 +292,27 @@ table.hd td.blk{padding-left:8mm}
   <div class="row"><a class="btn" href="template-site.xlsx" download>Unduh template</a><input id="sapFile" type="file" accept=".xlsx,.xls,.csv" style="width:auto"><button class="main hide" id="sapXls">Unduh Excel dan simpan kode baru</button></div>
   <div id="sapInfo" class="msg hide"></div>
   <div class="tbl"><table class="t hide" id="sapTbl"><thead><tr><th>No</th><th>Site</th><th>Jenis</th><th>Provinsi</th><th>Station code</th><th>Profit center</th><th>Status</th></tr></thead><tbody id="sapRows"></tbody></table></div>
+</section>
+</div>
+<div class="view" id="v-cari">
+<div class="vh"><h1>Cari station</h1><p>Cari station code dan profit center berdasarkan nama site, station code, atau profit center. Hasilnya bisa disalin atau diunduh ke Excel.</p></div>
+<section class="panel">
+  <h2>Pencarian</h2>
+  <div class="grid">
+    <div class="span2"><label for="cqText">Ketik nama site, station code, atau profit center</label><input id="cqText" placeholder="Contoh: ngaglik, L.E.YOG0073, atau 4805300073" autocomplete="off"></div>
+    <div><label for="cqJenis">Jenis</label><select id="cqJenis"><option value="">Semua</option><option value="EVCS">EVCS</option><option value="BSS">BSS</option></select></div>
+    <div class="span2"><label for="cqProv">Provinsi</label><select id="cqProv"></select></div>
+  </div>
+  <details>
+    <summary>Cari banyak sekaligus (tempel daftar nama, station code, atau profit center)</summary>
+    <label for="cqMulti" style="margin-top:10px">Satu per baris. Hasilnya hanya yang cocok persis, dan yang tidak ditemukan ditampilkan terpisah.</label>
+    <textarea id="cqMulti" rows="5"></textarea>
+    <div class="row" style="margin-top:10px"><button class="main" id="cqGo">Cari daftar ini</button></div>
+  </details>
+  <div id="cqInfo" class="msg">Memuat data station...</div>
+  <div class="row" style="margin-bottom:10px"><button class="main" id="cqXls">Unduh hasil (Excel)</button><button id="cqAll">Unduh semua station (Excel)</button></div>
+  <div class="tbl"><table class="t"><thead><tr><th>Station code</th><th>Profit center</th><th>Nama site</th><th>Nama lain</th><th>Jenis</th><th>Provinsi</th></tr></thead><tbody id="cqRows"></tbody></table></div>
+  <p style="font-size:13px;color:var(--mute)">Klik station code atau profit center untuk menyalinnya.</p>
 </section>
 </div>
 <div class="view" id="v-fix">
@@ -565,9 +587,11 @@ function mapInfo(r){
 
 /* ===== Daftar baris dan cek lokasi ===== */
 function showInfo(t){$("wrap").classList.remove("hide");$("info").textContent=t}
+function gkey(r){return r.wo+"|"+r.vendor+"|"+norm(r.s.site_name)}
+function setV(i,v,al){var k=gkey(lines[i]);lines.forEach(function(r){if(gkey(r)===k){r.v=v;r.alasan=v==="no"?(al||""):""}})}
 function draw(){
   $("rows").innerHTML=lines.map(function(r,i){var s=r.s;
-    return '<tr data-i="'+i+'"'+(i===cur?' class="sel"':'')+'><td>'+(i+1)+'</td><td>'+esc(r.vendor)+'</td><td>'+r.wo+'</td><td>'+esc(s.site_name)+'</td><td>'+esc(s.station_code)+'</td><td class="pc">'+esc(s.profit_center)+'</td><td>'+esc(r.note)+'</td><td>'+esc(s.city)+'</td>'+
+    return '<tr data-i="'+i+'"'+(i===cur?' class="sel"':'')+'><td>'+(i+1)+'</td><td>'+esc(r.vendor)+'</td><td>'+r.wo+'</td><td>'+esc(s.site_name)+'</td><td>'+jenisOfSC(s.station_code)+'</td><td>'+esc(s.station_code)+'</td><td class="pc">'+esc(s.profit_center)+'</td><td>'+esc(r.note)+'</td><td>'+esc(s.city)+'</td>'+
     '<td><select class="vsel"><option value="">Belum dicek</option><option value="ok"'+(r.v==="ok"?" selected":"")+'>Sesuai</option><option value="no"'+(r.v==="no"?" selected":"")+'>Tidak sesuai</option></select></td>'+
     '<td><input class="alasan" value="'+esc(r.alasan)+'"'+(r.v==="no"?"":" disabled")+' placeholder="Wajib jika tidak sesuai" style="min-width:190px"></td></tr>';
   }).join("");
@@ -591,20 +615,20 @@ function advance(){
   for(var k=1;k<=lines.length;k++){var j=(cur+k)%lines.length;if(lines[j].v===""){setCur(j);return}}
   setCur(cur);
 }
-$("rvOk").onclick=function(){if(cur<0)return;lines[cur].v="ok";lines[cur].alasan="";advance()};
+$("rvOk").onclick=function(){if(cur<0)return;setV(cur,"ok","");advance()};
 $("rvNo").onclick=function(){
   if(cur<0)return;var a=$("rvAlasan").value.trim();
   if(!a){$("rvAlasan").focus();$("rvAlasan").placeholder="Isi alasan dulu, lalu klik Tidak sesuai lagi";return}
-  lines[cur].v="no";lines[cur].alasan=a;advance();
+  setV(cur,"no",a);advance();
 };
 $("rvPrev").onclick=function(){if(cur>0)setCur(cur-1)};
 $("rvNext").onclick=function(){if(cur<lines.length-1)setCur(cur+1)};
 $("rows").addEventListener("change",function(e){
   if(!e.target.classList.contains("vsel"))return;
-  var r=lines[e.target.closest("tr").dataset.i];r.v=e.target.value;if(r.v!=="no")r.alasan="";draw();
+  var ix=+e.target.closest("tr").dataset.i;setV(ix,e.target.value,lines[ix].alasan);draw();
 });
 $("rows").addEventListener("input",function(e){
-  if(e.target.classList.contains("alasan"))lines[e.target.closest("tr").dataset.i].alasan=e.target.value;
+  if(e.target.classList.contains("alasan")){var ix=+e.target.closest("tr").dataset.i,k=gkey(lines[ix]);lines.forEach(function(r){if(gkey(r)===k)r.alasan=e.target.value})}
 });
 $("rows").addEventListener("click",function(e){
   if(/SELECT|INPUT|OPTION|A/.test(e.target.tagName))return;
@@ -676,19 +700,26 @@ function buildFromRows(rows,opt){
     var g=function(){return rowGet(r,Array.prototype.slice.call(arguments))};
     var site=g("site name","nama site"),vendor=g("vendor"),wt=g("jenis wo");
     if(!site&&!vendor&&!g("station code"))return;
-    var woT=/pln/i.test(wt)?"PLN":(/con|konst/i.test(wt)?"CON":""),why="";
-    var jt=/bss|battery|swap/i.test(g("jenis station"))?"BSS":(/evcs|ev|charg/i.test(g("jenis station"))?"EVCS":"");
+    var woT=/pln/i.test(wt)?"PLN":(/con|konst/i.test(wt)?"CON":"");
+    var js=g("jenis station");
+    var both=/(evcs|\bev\b).*(bss|battery|swap)|(bss|battery|swap).*(evcs|\bev\b)|keduanya|gabungan|both|combine/i.test(js);
+    var jts=both?["EVCS","BSS"]:[/bss|battery|swap/i.test(js)?"BSS":(/evcs|ev|charg/i.test(js)?"EVCS":"")];
     var y=/kerja|bcc|coop/i.test(g("skema"))?"8":"3";
     var pi=findProv(g("provinsi"));
-    var s={station_code:"",profit_center:"",project_name:g("project")||site,site_name:site,address:g("alamat"),city:g("kota"),gmaps:g("gmaps"),
-      machine_type:g("tipe mesin"),power:g("power"),pic:g("pic di lokasi"),bd_pic:g("bd pic"),latitude:"",longitude:"",
-      provinsi:pi>=0?provs[pi][0]:g("provinsi"),epc:vendor};
-    var isNew=false,note="";
-    if(!site)why="nama site kosong";
-    else if(!opt.sap&&!vendor)why="vendor kosong";
-    else if(!opt.sap&&!woT)why="Jenis WO belum diisi (CONS atau PLN)";
-    if(!why){
-      var sc=g("station code").toUpperCase();
+    var why0="";
+    if(!site)why0="nama site kosong";
+    else if(!opt.sap&&!vendor)why0="vendor kosong";
+    else if(!opt.sap&&!woT)why0="Jenis WO belum diisi (CONS atau PLN)";
+    if(why0){bad.push("baris "+(i+2)+" ("+(site||"tanpa nama")+"): "+why0);return}
+    jts.forEach(function(jt){
+      var tag=both?" ["+jt+"]":"",why="";
+      var mt=both?(g(jt==="EVCS"?"mesin evcs":"mesin bss")||g("tipe mesin")):g("tipe mesin");
+      var s={station_code:"",profit_center:"",project_name:g("project")||site,site_name:site,address:g("alamat"),city:g("kota"),gmaps:g("gmaps"),
+        machine_type:mt,power:g("power"),pic:g("pic di lokasi"),bd_pic:g("bd pic"),latitude:"",longitude:"",
+        provinsi:pi>=0?provs[pi][0]:g("provinsi"),epc:vendor};
+      var isNew=false,note="";
+      var sc=g("station code").toUpperCase(),scm=sc?SCRE.exec(sc):null;
+      if(both&&scm&&typeOf(scm)!==jt)sc="";
       if(sc){
         if(!SCRE.exec(sc))why="format station code tidak dikenal";
         else{
@@ -697,7 +728,7 @@ function buildFromRows(rows,opt){
           note=base?"Sudah ada":"Kode dari file, tidak ada di master";
         }
       }else{
-        if(!jt)why="Jenis Station belum diisi (EVCS atau BSS)";
+        if(!jt)why="Jenis Station belum diisi (EVCS, BSS, atau EVCS+BSS)";
         else if(pi<0)why="provinsi kosong atau tidak dikenali";
         else{
           var p=provs[pi];
@@ -720,14 +751,14 @@ function buildFromRows(rows,opt){
           }
         }
       }
-    }
-    if(why)bad.push("baris "+(i+2)+" ("+(site||"tanpa nama")+"): "+why);
-    else out.push({s:s,vendor:vendor,wo:woT,jt:jt,isNew:isNew,note:note,coords:parseCoord(s.gmaps),v:"",alasan:""});
+      if(why)bad.push("baris "+(i+2)+" ("+site+")"+tag+": "+why);
+      else out.push({s:s,vendor:vendor,wo:woT,jt:jt,isNew:isNew,note:note,coords:parseCoord(s.gmaps),v:"",alasan:""});
+    });
   });
   if(opt.sap)return{out:out,bad:bad};
   lines=out;errs=bad;
   var nb=out.filter(function(x){return x.isNew}).length,vs={};out.forEach(function(x){vs[x.wo+"|"+x.vendor]=1});
-  showInfo(out.length+" baris siap dicek untuk "+Object.keys(vs).length+" surat ("+nb+" kode baru dibuat, "+(out.length-nb)+" sudah ada)."+(bad.length?" "+bad.length+" baris dilewati: "+bad.join("; "):""));
+  showInfo(out.length+" baris station siap dicek untuk "+Object.keys(vs).length+" surat ("+nb+" kode baru dibuat, "+(out.length-nb)+" sudah ada). Site yang punya kode EVCS dan BSS dicek sekali saja."+(bad.length?" "+bad.length+" baris dilewati: "+bad.join("; "):""));
   $("err").classList.add("hide");setCur(out.length?0:-1);
 }
 $("bfile").onchange=function(e){
@@ -815,15 +846,27 @@ function letter(w){
     rep='<ol type="a"><li>Membuat laporan yang mencakup temuan dari seluruh analisis dan rekomendasi mengenai kelayakan lokasi.<br><i>Produce a report that includes the findings of all analyses and recommendations on site feasibility.</i></li>'+
      '<li>Memberikan penawaran harga pengerjaan terperinci yang diperlukan serta estimasi waktu pengerjaan.<br><i>Provide a detailed quote for the workmanship and material costs (if any) required as well as an estimate of the work time.</i></li></ol>';
   }
-  var cols=[["No",null],["Project Name","project_name"],["Site Name","site_name"],["Station Code","station_code"],["Profit Center","profit_center"],["Full Address","address"],["City","city"],["GMaps","gmaps"],["Machine Type","machine_type"],["Power","power"],["PIC at Location","pic"],["BD PIC","bd_pic"]]
-    .filter(function(c){return !c[1]||w.lines.some(function(s){return s[c[1]]})});
-  var lamp='<table class="lt"><thead><tr>'+cols.map(function(c){return '<th>'+c[0]+'</th>'}).join("")+'</tr></thead><tbody>'+
-    w.lines.map(function(s,i){return '<tr>'+cols.map(function(c){
-      if(!c[1])return '<td>'+(i+1)+'</td>';
-      var v=s[c[1]];
-      if(c[1]==="gmaps")return '<td>'+(v?'<a href="'+esc(v)+'">'+esc(v)+'</a>':"")+'</td>';
-      return '<td>'+esc(v)+'</td>';
-    }).join("")+'</tr>'}).join("")+'</tbody></table>';
+  var groups=[],gi={};
+  w.lines.forEach(function(s){var k=norm(s.site_name)||("#"+groups.length);if(gi[k]==null){gi[k]=groups.length;groups.push([])}groups[gi[k]].push(s)});
+  var multi=groups.some(function(g){return g.length>1});
+  var C=[{h:"No",site:1,n:1},{h:"Project Name",site:1,k:"project_name"},{h:"Site Name",site:1,k:"site_name"},{h:"Jenis",k:"jenis",jn:1},{h:"Station Code",k:"station_code"},{h:"Profit Center",k:"profit_center"},{h:"Full Address",site:1,k:"address"},{h:"City",site:1,k:"city"},{h:"GMaps",site:1,k:"gmaps",link:1},{h:"Machine Type",k:"machine_type"},{h:"Power",site:1,k:"power"},{h:"PIC at Location",site:1,k:"pic"},{h:"BD PIC",site:1,k:"bd_pic"}]
+    .filter(function(c){return c.n||(c.jn?multi:w.lines.some(function(s){return s[c.k]}))});
+  var lamp='<table class="lt"><thead><tr>'+C.map(function(c){return '<th>'+c.h+'</th>'}).join("")+'</tr></thead><tbody>'+
+    groups.map(function(g,gn){
+      return g.map(function(s,si){
+        return '<tr>'+C.map(function(c){
+          if(c.site){
+            if(si>0)return "";
+            var rs=g.length>1?' rowspan="'+g.length+'"':"";
+            if(c.n)return '<td'+rs+'>'+(gn+1)+'</td>';
+            var v="";for(var z=0;z<g.length&&!v;z++)v=g[z][c.k];
+            if(c.link)return '<td'+rs+'>'+(v?'<a href="'+esc(v)+'">'+esc(v)+'</a>':"")+'</td>';
+            return '<td'+rs+'>'+esc(v)+'</td>';
+          }
+          return '<td>'+esc(c.jn?jenisOfSC(s.station_code):s[c.k])+'</td>';
+        }).join("")+'</tr>';
+      }).join("");
+    }).join("")+'</tbody></table>';
   function paged(inner,cls){return '<table class="pg '+(cls||'')+'"><thead><tr><td><div class="hs"></div></td></tr></thead><tfoot><tr><td><div class="fs"></div></td></tr></tfoot><tbody><tr><td class="bd">'+inner+'</td></tr></tbody></table>'}
   var sign=stamp?'<img class="stamp" src="stempel.png" alt="" onerror="this.outerHTML=\'&lt;div class=ttd&gt;&lt;/div&gt;\'">':'<div class="ttd"></div>';
   var body='<div class="ttl"><b>Surat Perintah Kerja</b><br><i><b>Work Order Letter</b></i><br>No. '+esc(w.no)+'</div>'+
@@ -930,6 +973,7 @@ $("hist").addEventListener("click",async function(e){
 function fillProv(){
   var o='<option value="">Pilih provinsi</option>'+provs.map(function(p,i){return '<option value="'+i+'">'+esc(p[0])+' ('+p[2]+', '+p[3]+')</option>'}).join("");
   $("nProv").innerHTML=o;$("fProv").innerHTML=o;
+  $("cqProv").innerHTML='<option value="">Semua provinsi</option>'+provs.map(function(p,i){return '<option value="'+i+'">'+esc(p[0])+'</option>'}).join("");
 }
 fetch("provinces.csv").then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){
   var x=parseCSV(t,"provinsi").map(function(r){return[r.provinsi,r.provinsi_eng,r.kode_sc,r.kode_pc]});
@@ -1121,8 +1165,71 @@ $("fCsv").onclick=function(){
 };
 $("nClear").onclick=function(){if(confirm("Kosongkan daftar ini di browser? Pastikan barisnya sudah masuk ke stations.csv.")){saveNew([]);saveFix([]);drawNew()}};
 
+/* ===== Cari station ===== */
+var cqRes=[],cqMiss=[],cqTimer=null;
+function jenisOfSC(sc){return /^L\.E\./i.test(sc)?"EVCS":(/^B\./i.test(sc)?"BSS":"")}
+function hay(s){return s._h||(s._h=(s.site_name+" "+s.project_name+" "+s.station_code+" "+s.profit_center).toLowerCase())}
+function cqRender(){
+  var shown=cqRes.slice(0,300);
+  $("cqRows").innerHTML=shown.map(function(s){var pi=provIdx(s.provinsi);
+    return '<tr><td class="cp pc" title="Klik untuk menyalin">'+esc(s.station_code)+'</td><td class="cp pc" title="Klik untuk menyalin">'+esc(s.profit_center)+'</td><td>'+esc(s.site_name)+'</td><td>'+esc(s.project_name===s.site_name?"":s.project_name)+'</td><td>'+jenisOfSC(s.station_code)+'</td><td>'+esc(pi>=0?provs[pi][0]:s.provinsi)+'</td></tr>'}).join("");
+  var msg=fmtN(cqRes.length)+" station cocok"+(cqRes.length>300?", ditampilkan 300 pertama. Unduh Excel untuk melihat semuanya.":".");
+  if(cqMiss.length)msg+=" Tidak ditemukan ("+cqMiss.length+"): "+cqMiss.slice(0,15).join(", ")+(cqMiss.length>15?", dan lainnya (ada di file Excel)":"")+".";
+  $("cqInfo").textContent=msg;
+}
+function cqSearch(){
+  cqMiss=[];
+  var q=$("cqText").value.trim().toLowerCase(),j=$("cqJenis").value,pv=$("cqProv").value,toks=q?q.split(/\s+/):[];
+  cqRes=stations.filter(function(s){
+    if(j&&jenisOfSC(s.station_code)!==j)return false;
+    if(pv!==""&&provIdx(s.provinsi)!==+pv)return false;
+    if(toks.length){var h=hay(s);for(var i=0;i<toks.length;i++)if(h.indexOf(toks[i])<0)return false}
+    return true;
+  });
+  cqRender();
+}
+function cqMulti(){
+  var lines=$("cqMulti").value.split(/\r?\n/).map(function(x){return x.split(/[\t;]/)[0].trim()}).filter(Boolean);
+  var j=$("cqJenis").value,pv=$("cqProv").value,seen={},out=[],miss=[];
+  lines.forEach(function(L){
+    var k=L.toLowerCase();if(seen[k])return;seen[k]=1;var n=norm(L);
+    var hit=stations.filter(function(s){
+      if(j&&jenisOfSC(s.station_code)!==j)return false;
+      if(pv!==""&&provIdx(s.provinsi)!==+pv)return false;
+      return s.station_code.toLowerCase()===k||s.profit_center===L||(n&&(norm(s.site_name)===n||norm(s.project_name)===n));
+    });
+    if(!hit.length)miss.push(L);else hit.forEach(function(s){if(out.indexOf(s)<0)out.push(s)});
+  });
+  cqRes=out;cqMiss=miss;cqRender();
+}
+function cqRows(list){return list.map(function(s){var pi=provIdx(s.provinsi);return[s.station_code,s.profit_center,s.site_name,s.project_name===s.site_name?"":s.project_name,jenisOfSC(s.station_code),pi>=0?provs[pi][0]:s.provinsi]})}
+function cqDownload(list,name,miss){
+  var head=["Station Code","Profit Center","Nama Site","Nama Lain","Jenis","Provinsi"];
+  if(typeof XLSX==="undefined"){
+    var csv=[head].concat(cqRows(list)).map(function(r){return r.map(q).join(",")}).join("\n");dl(name+".csv",csv);return;
+  }
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([head].concat(cqRows(list))),"Hasil");
+  if(miss&&miss.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Tidak ditemukan"]].concat(miss.map(function(x){return[x]}))),"Tidak ditemukan");
+  XLSX.writeFile(wb,name+".xlsx");
+}
+$("cqText").addEventListener("input",function(){clearTimeout(cqTimer);cqTimer=setTimeout(cqSearch,250)});
+["cqJenis","cqProv"].forEach(function(i){$(i).addEventListener("change",function(){$("cqMulti").value.trim()?cqMulti():cqSearch()})});
+$("cqGo").onclick=cqMulti;
+$("cqXls").onclick=function(){if(!cqRes.length){$("cqInfo").textContent="Belum ada hasil untuk diunduh.";return}cqDownload(cqRes,"hasil-pencarian-station",cqMiss)};
+$("cqAll").onclick=function(){cqDownload(stations,"semua-station",null)};
+$("cqRows").addEventListener("click",function(e){
+  var c=e.target.closest(".cp");if(!c)return;
+  var v=c.textContent;
+  (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){
+    c.style.background="#ffe9d6";setTimeout(function(){c.style.background=""},500);
+  }).catch(function(){});
+});
+// pertama kali membuka halaman Cari, dan setiap data station berubah
+var cqOld=renderDash;renderDash=function(){cqOld();if($("v-cari").classList.contains("on")||!cqRes.length)cqSearch()};
+
 /* ===== Navigasi dan dashboard ===== */
-var VIEWS=["dash","wo","sap","fix","hist"];
+var VIEWS=["dash","wo","sap","cari","fix","hist"];
 function go(v){
   if(VIEWS.indexOf(v)<0)v="dash";
   VIEWS.forEach(function(x){$("v-"+x).classList.toggle("on",x===v)});
