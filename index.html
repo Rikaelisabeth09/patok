@@ -171,6 +171,9 @@ table.hd td.blk{padding-left:8mm}
   .lamp th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .lamp tr,table.hd tr{break-inside:avoid}
   .lamp thead{display:table-header-group}
+  #sheet.po-surat .lampwrap{display:none}
+  #sheet.po-lamp .ltr{display:none}
+  #sheet.po-lamp .lampwrap{page:auto;break-before:auto;margin-top:0}
 }
 </style>
 </head>
@@ -821,7 +824,7 @@ function letter(w){
       if(c[1]==="gmaps")return '<td>'+(v?'<a href="'+esc(v)+'">'+esc(v)+'</a>':"")+'</td>';
       return '<td>'+esc(v)+'</td>';
     }).join("")+'</tr>'}).join("")+'</tbody></table>';
-  function paged(inner,cls){return '<table class="pg"><thead><tr><td><div class="hs"></div></td></tr></thead><tfoot><tr><td><div class="fs"></div></td></tr></tfoot><tbody><tr><td class="bd">'+inner+'</td></tr></tbody></table>'}
+  function paged(inner,cls){return '<table class="pg '+(cls||'')+'"><thead><tr><td><div class="hs"></div></td></tr></thead><tfoot><tr><td><div class="fs"></div></td></tr></tfoot><tbody><tr><td class="bd">'+inner+'</td></tr></tbody></table>'}
   var sign=stamp?'<img class="stamp" src="stempel.png" alt="" onerror="this.outerHTML=\'&lt;div class=ttd&gt;&lt;/div&gt;\'">':'<div class="ttd"></div>';
   var body='<div class="ttl"><b>Surat Perintah Kerja</b><br><i><b>Work Order Letter</b></i><br>No. '+esc(w.no)+'</div>'+
    '<p>Dengan Hormat,<br><i>Sincerely</i>,</p>'+intro+
@@ -832,18 +835,28 @@ function letter(w){
    '<p>Jakarta, '+fmt(w.tgl)+'</p><p>Hormat Kami,</p><p>PT Vgreen Global Charging Station Investment Indonesia</p>'+sign+
    '<p><b>'+esc(w.ttd)+'</b><br>'+esc(w.jab)+'</p>';
   return '<div class="wo" style="background-image:url('+WMK+')"><div class="scr lh"><img src="'+LOGO+'" alt="V-GREEN"></div>'+
-    paged(body)+
+    paged(body,'ltr')+
     '<div class="scr foot">Graha Binakarsa Lantai 7, Jl H.R Rasuna Said Kav C-18 RT 002 RW 005, Karet Kuningan , Kecamatan Setiabudi<br>Kota Jakarta Selatan, DKI Jakarta 12940</div>'+
     '<div class="lampwrap"><div class="scr lh"><img src="'+LOGO+'" alt="V-GREEN"></div>'+paged('<div class="lamp">'+lamp+'</div>')+'</div></div>';
 }
 function show(ws){
   var s=$("sheet");
-  s.innerHTML='<div class="noprint bar"><button class="main" onclick="window.print()">Cetak / Simpan PDF ('+ws.length+' surat)</button><button onclick="closeSheet()">Tutup</button><span>Di dialog cetak pilih "Save as PDF", matikan "Headers and footers", dan aktifkan "Background graphics".</span></div>'+
+  s.innerHTML='<div class="noprint bar"><button class="main" onclick="printMode(\'all\')">Cetak surat dan lampiran ('+ws.length+' surat)</button><button onclick="printMode(\'surat\')">Cetak surat saja</button><button onclick="printMode(\'lamp\')">Cetak lampiran saja (landscape)</button><button onclick="closeSheet()">Tutup</button><span>Di dialog cetak pilih "Save as PDF", matikan "Headers and footers", dan aktifkan "Background graphics". Kalau lampiran di cetak gabungan tidak mendatar, cetak surat dan lampiran secara terpisah.</span></div>'+
     '<div class="paper">'+
     '<div class="fx fx-w"><img src="'+WMK+'" alt=""></div><div class="fx fx-h"><img src="'+LOGO+'" alt=""></div>'+
     '<div class="fx fx-f">Graha Binakarsa Lantai 7, Jl H.R Rasuna Said Kav C-18 RT 002 RW 005, Karet Kuningan , Kecamatan Setiabudi<br>Kota Jakarta Selatan, DKI Jakarta 12940</div>'+
     ws.map(letter).join("")+'</div>';
   s.classList.add("on");s.scrollTop=0;
+}
+function printMode(m){
+  var s=$("sheet"),st=document.createElement("style");
+  st.id="pgmode";s.classList.remove("po-surat","po-lamp");
+  if(m==="surat"){s.classList.add("po-surat");st.textContent="@page{size:A4 portrait;margin:0}"}
+  else if(m==="lamp"){s.classList.add("po-lamp");st.textContent="@page{size:A4 landscape;margin:0}@page land{size:A4 landscape;margin:0}"}
+  if(st.textContent)document.head.appendChild(st);
+  function done(){s.classList.remove("po-surat","po-lamp");var o=$("pgmode");if(o)o.remove();window.removeEventListener("afterprint",done)}
+  window.addEventListener("afterprint",done);
+  setTimeout(function(){window.print()},60);
 }
 function closeSheet(){$("sheet").classList.remove("on")}
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet()});
