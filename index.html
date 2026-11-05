@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patok</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--ink:#0e1116;--paper:#eceff1;--grid:#dde1e5;--steel:#2b4c7e;--orange:#ff5a14;--mute:#5b6570;--soft:#c5ccd3;--ok:#1f7a4d;--bad:#c62828}
+html{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:400 15.5px/1.5 "Barlow",system-ui,sans-serif;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px}
+.mono,.pc,.kpi b{font-family:"JetBrains Mono",ui-monospace,monospace}
+/* ----- header ----- */
+.top{background:var(--ink);color:#fff;display:flex;align-items:stretch;flex-wrap:wrap;gap:8px 30px;padding:0 28px;position:sticky;top:0;z-index:30;border-bottom:3px solid var(--orange)}
+.brand{display:flex;align-items:center;gap:11px;padding:10px 0}
+.brand .w{font:700 28px/1 "Barlow Condensed",sans-serif;letter-spacing:.14em}
+.brand small{display:block;font:400 11px/1.2 "JetBrains Mono",monospace;color:#8d98a5;margin-top:3px;letter-spacing:.02em}
+#nav{display:flex;margin-left:auto;flex-wrap:wrap}
+#nav button{all:unset;box-sizing:border-box;cursor:pointer;padding:0 16px;display:flex;align-items:center;gap:8px;font:600 15px/1 "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#a9b3be;border-bottom:4px solid transparent;border-top:4px solid transparent;min-height:56px}
+#nav button:hover{color:#fff}
+#nav button.on{color:#fff;border-bottom-color:var(--orange)}
+#nav button:focus-visible{outline:2px solid var(--orange);outline-offset:-4px}
+.who{display:flex;align-items:center;gap:10px;font:400 12px "JetBrains Mono",monospace;color:#8d98a5;padding-left:6px}
+.who button{border-color:#8d98a5;color:#fff;background:transparent}
+body.db .localonly{display:none!important}
+#login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+  background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px}
+#login.hide{display:none}
+.lbox{width:min(400px,100%);background:#fff;border:1.5px solid var(--ink);padding:26px 26px 22px;border-top:6px solid var(--orange)}
+.lbox .lw{font:700 34px/1 "Barlow Condensed",sans-serif;letter-spacing:.14em;margin-bottom:6px}
+.lbox p{margin:0 0 18px;color:var(--mute)}
+.badge{background:var(--orange);color:#fff;font:700 12px/1 "JetBrains Mono",monospace;padding:3px 6px}
+/* ----- halaman ----- */
+.main{max-width:1280px;margin:0 auto;padding:26px 28px 80px}
+.view{display:none}.view.on{display:block}
+.vh h1{margin:0 0 4px;font:700 40px/1.05 "Barlow Condensed",sans-serif;letter-spacing:.03em;text-transform:uppercase}
+.vh p{margin:0 0 22px;color:var(--mute);max-width:66ch}
+.panel{background:#fff;border:1.5px solid var(--ink);margin-bottom:22px;padding:0 0 18px}
+.panel>h2{margin:0 0 14px;padding:8px 16px;background:var(--ink);color:#fff;font:600 15px/1.2 "Barlow Condensed",sans-serif;letter-spacing:.13em;text-transform:uppercase}
+.panel>*:not(h2){margin-left:16px;margin-right:16px}
+h3{margin:20px 16px 6px;font:600 14px/1.2 "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.span2{grid-column:span 2}.full{grid-column:1/-1}
+label{display:block;font:600 12.5px/1.2 "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+input,select,textarea{width:100%;padding:9px 11px;border:1.5px solid #8b95a1;border-radius:0;background:#fff;color:var(--ink);font:inherit}
+input:focus,select:focus,textarea:focus,button:focus-visible,a.btn:focus-visible{outline:3px solid var(--orange);outline-offset:0}
+input[readonly]{background:var(--paper)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button,a.btn{font:600 15px/1 "Barlow Condensed",sans-serif;letter-spacing:.09em;text-transform:uppercase;padding:11px 16px;border-radius:0;border:1.5px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,a.btn:hover{background:var(--paper)}
+button.main{background:var(--ink);color:#fff}
+button.main:hover{background:var(--steel);border-color:var(--steel)}
+button.okb{background:var(--ok);border-color:var(--ok);color:#fff}
+button.badb{background:var(--bad);border-color:var(--bad);color:#fff}
+button.sm{padding:6px 11px;font-size:13px}
+button.sm.on{background:var(--ink);color:#fff}
+a{color:var(--steel)}
+.hide{display:none!important}
+.msg{padding:10px 14px;border-left:5px solid var(--orange);background:#fff1ea;font-size:14.5px;margin-top:12px;margin-bottom:12px}
+.msg.err{border-color:var(--bad);background:#fdecec}
+.tbl{overflow-x:auto}
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th{text-align:left;padding:8px 10px;font:600 12.5px/1.2 "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);border-bottom:2px solid var(--ink);white-space:nowrap}
+table.t td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--soft);white-space:nowrap}
+table.t tr.sel td{background:#fff1ea}
+details{margin-top:14px}summary{cursor:pointer;color:var(--steel);font-weight:600}
+#rev{border:1.5px solid var(--ink);background:#fff;padding:14px;margin:12px 16px}
+#rvMap{width:100%;height:340px;border:1px solid var(--soft);margin:8px 0;background:var(--paper)}
+/* ----- dashboard ----- */
+.tb{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--ink);background:#fff;margin-bottom:22px}
+.tb>div{padding:12px 16px 12px;border-right:1px solid var(--ink)}
+.tb>div:nth-child(4){border-right:0}
+.tb .k{font:600 12px/1.2 "Barlow Condensed",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.tb .n{font:700 36px/1.05 "JetBrains Mono",monospace;letter-spacing:-.03em;margin:4px 0 2px}
+.tb .s{font-size:13px;color:var(--mute)}
+.tb .meta{grid-column:1/-1;border-right:0;border-top:1px solid var(--ink);display:flex;gap:26px;flex-wrap:wrap;padding:8px 16px;font:400 12.5px "JetBrains Mono",monospace;color:var(--mute)}
+.tb .meta b{color:var(--ink);font-weight:500}
+.dgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:22px;align-items:start}
+.c8{grid-column:span 8}.c4{grid-column:span 4}.c7{grid-column:span 7}.c5{grid-column:span 5}
+.modes{display:flex;gap:6px;margin-bottom:12px}
+.tm{display:grid;grid-template-columns:repeat(17,minmax(0,1fr));gap:3px}
+.tile{aspect-ratio:1;border:1px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;padding:3px 4px;font:500 10.5px/1.1 "JetBrains Mono",monospace;background:#fff;min-width:0;overflow:hidden}
+.tile b{font-weight:700;letter-spacing:-.02em}
+.tile.dk{color:#fff}
+.tile.z{border-color:var(--soft);color:#a3adb7}
+.scale{display:flex;align-items:center;gap:10px;margin-top:12px;font:400 12px "JetBrains Mono",monospace;color:var(--mute)}
+.scale i{display:block;height:10px;width:160px;border:1px solid var(--ink)}
+.legend{display:flex;gap:16px;align-items:center;font:600 13px "Barlow Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.sw{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px}
+.sw.e,.seg.e{background:var(--steel)}.sw.b,.seg.b{background:var(--orange)}
+.hb{display:grid;grid-template-columns:minmax(90px,150px) 1fr 62px;gap:12px;align-items:center;margin:5px 16px;font-size:13.5px}
+.hb .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .trk{display:block;height:17px;border-left:1.5px solid var(--ink);border-bottom:1px solid var(--soft);background:repeating-linear-gradient(90deg,var(--soft) 0 1px,transparent 1px 10%)}
+.hb .bar{display:flex;height:100%}
+.hb .bar i{display:block;height:100%}
+.hb .bar.one i{background:var(--ink)}
+.hb .bar.bad i{background:var(--orange)}
+.hb .val{text-align:right;font:500 13px "JetBrains Mono",monospace}
+.empty{color:var(--mute);font-size:14px;padding:6px 16px}
+.qm{display:grid;grid-template-columns:auto 1fr;gap:0 14px;align-items:baseline}
+.qm b{font:700 28px/1.1 "JetBrains Mono",monospace;text-align:right;letter-spacing:-.03em}
+.qm b.warn{color:var(--orange)}
+.qm span{font-size:14px;color:var(--mute);padding-bottom:12px}
+/* ----- surat ----- */
+#sheet{display:none;position:fixed;inset:0;z-index:60;overflow:auto;background:#cfd6dc}
+#sheet.on{display:block}
+#sheet .bar{position:sticky;top:0;z-index:2;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 22px;background:var(--ink);color:#c9d1d9;font:14px "Barlow",sans-serif;border-bottom:3px solid var(--orange)}
+#sheet .bar button{border-color:#fff}
+#sheet .bar button.main{background:var(--orange);border-color:var(--orange)}
+#sheet .paper{max-width:900px;margin:20px auto 40px;background:#fff;color:#111;padding:30px 42px;font:13.5px/1.5 Cambria,"Times New Roman",serif;border:1px solid #aab4bd}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:18px;font:700 22px "Barlow Condensed",sans-serif;letter-spacing:3px;color:#1f3d2b}
+.logo img{height:44px}
+.ttl{text-align:center;margin-bottom:16px}.ttl b{font-size:15px}
+table.hd{border-collapse:collapse;margin:6px 0}
+table.hd td{vertical-align:top;padding:1px 4px}
+table.hd td.n{width:24px}table.hd td.l{width:260px}
+.paper ol{margin:4px 0 10px;padding-left:46px}
+.paper li{margin-bottom:6px}
+.paper p{margin:8px 0;text-align:justify}
+.ttd{height:80px}
+.foot{text-align:center;font-size:11px;margin-top:28px;color:#333}
+.wo+.wo{margin-top:48px;padding-top:24px;border-top:2px dashed #bbb}
+.lamp{margin-top:36px}
+.lamp table{border-collapse:collapse;width:100%;font:10.5px/1.35 "Barlow",Arial,sans-serif}
+.lamp th{background:#000;color:#fff;padding:5px;border:1px solid #000;text-align:center}
+.lamp td{border:1px solid #444;padding:4px 5px;vertical-align:top}
+.lamp td.c{text-align:center}
+.lamp a{color:#0b5cad;word-break:break-all}
+@media(max-width:980px){
+  .top{padding:0 14px}
+  #nav{margin-left:0;overflow-x:auto;width:100%;flex-wrap:nowrap}
+  #nav button{min-height:46px;white-space:nowrap;padding:0 12px}
+  .main{padding:20px 14px 60px}
+  .vh h1{font-size:32px}
+  .grid,.dgrid{grid-template-columns:1fr}
+  .span2,.c8,.c4,.c7,.c5{grid-column:auto}
+  .tb{grid-template-columns:1fr 1fr}
+  .tb>div:nth-child(2){border-right:0}
+  .tb>div:nth-child(-n+2){border-bottom:1px solid var(--ink)}
+  .tile{font-size:9px;padding:2px}
+  .hb{grid-template-columns:96px 1fr 54px}
+}
+@page{size:A4;margin:14mm 16mm 22mm}
+@page land{size:A4 landscape;margin:10mm 10mm 18mm}
+@media print{
+  #ui,.noprint{display:none!important}
+  body{background:#fff}
+  #sheet.on{position:static;overflow:visible;background:#fff}
+  #sheet .paper{max-width:none;margin:0;padding:0;border:0}
+  .wo+.wo{break-before:page;margin-top:0;padding-top:0;border-top:0}
+  .foot{position:fixed;bottom:0;left:0;right:0;margin:0}
+  .lamp{page:land;break-before:page;margin-top:0}
+  .lamp th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div id="ui" class="shell">
+  <header class="top">
+    <div class="brand"><svg width="30" height="34" viewBox="0 0 30 34" aria-hidden="true"><rect x="13" y="8" width="5" height="22" fill="#ff5a14"/><polygon points="13,8 18,8 15.5,1" fill="#fff"/><rect x="5" y="30" width="21" height="2" fill="#fff"/><rect x="15" y="12" width="3" height="4" fill="#fff"/></svg><div><span class="w">PATOK</span><small>kode / surat / lokasi site</small></div></div>
+    <nav id="nav">
+      <button data-v="dash" class="on">Dashboard</button>
+      <button data-v="wo">Surat WO</button>
+      <button data-v="sap">Kode SAP</button>
+      <button data-v="fix">Koreksi provinsi</button>
+      <button data-v="hist">Riwayat<span class="badge hide" id="navBadge"></span></button>
+    </nav>
+    <div class="who hide" id="who"><span id="whoMail"></span><button class="sm" id="logout">Keluar</button></div>
+  </header>
+  <main class="main">
+<div class="view on" id="v-dash">
+  <div class="vh"><h1>Dashboard</h1><p>Lembar ukur data station: sebaran provinsi, kualitas kode, dan surat yang sudah terbit.</p></div>
+  <div class="tb" id="tb"></div>
+  <div class="dgrid">
+    <section class="panel c8"><h2>Fig. 1 &nbsp; Peta kotak sebaran provinsi</h2>
+      <div class="modes"><button class="sm on" data-m="count">Jumlah station</button><button class="sm" data-m="mis">Kode tidak cocok</button></div>
+      <div id="tileMap" class="tm"></div><div class="scale" id="tileScale"></div></section>
+    <section class="panel c4"><h2>Fig. 2 &nbsp; Catatan kualitas</h2><div id="qm"></div><h3>Kode tidak cocok terbanyak</h3><div id="chMis" class="chart"></div></section>
+    <section class="panel c7"><h2>Fig. 3 &nbsp; Station per provinsi</h2><div class="legend"><span><i class="sw e"></i>EVCS</span><span><i class="sw b"></i>BSS</span></div><div id="chProv" class="chart"></div></section>
+    <section class="panel c5"><h2>Fig. 4 &nbsp; EPC dan vendor</h2><div id="chEpc" class="chart"></div><h3>Site per vendor di surat WO</h3><div id="chWo" class="chart"></div></section>
+  </div>
+</div>
+<div class="view" id="v-wo">
+<div class="vh"><h1>Surat Perintah Kerja</h1><p>Unggah daftar site, cek lokasi di peta, lalu surat per vendor dibuat otomatis lengkap dengan station code dan profit center.</p></div>
+<section class="panel">
+  <h2>1. Data surat (berlaku untuk semua surat)</h2>
+  <div class="grid">
+    <div><label for="tgl">Tanggal surat</label><input id="tgl" type="date"></div>
+    <div><label for="mulai">Mulai kerja</label><input id="mulai" type="date"></div>
+    <div><label for="selesai">Selesai kerja</label><input id="selesai" type="date"></div>
+    <div><label for="seqCON">Nomor urut awal surat Construction</label><input id="seqCON" type="number" min="1" placeholder="Contoh: 1493"></div>
+    <div><label for="seqPLN">Nomor urut awal surat PLN</label><input id="seqPLN" type="number" min="1" placeholder="Contoh: 688"></div>
+    <div><label for="ref">Kode setelah WOPLN (surat PLN)</label><input id="ref" placeholder="Contoh: 1477"></div>
+    <div><label>Durasi</label><input id="dur" readonly></div>
+    <div><label for="ttdNama">Penandatangan</label><input id="ttdNama" value="Bùi Quang Cường"></div>
+    <div><label for="ttdJab">Jabatan</label><input id="ttdJab" value="Head of Set Up"></div>
+  </div>
+</section>
+<section class="panel">
+  <h2>2. Daftar site</h2>
+  <div class="row">
+    <a class="btn" href="template-site.xlsx" download>Unduh template</a>
+    <span>Isi template, lalu unggah:</span>
+    <input id="bfile" type="file" accept=".xlsx,.xls,.csv" style="width:auto">
+    <button id="bNew">Buat site baru satuan</button>
+    <button id="bFix">Koreksi provinsi</button>
+  </div>
+  <details>
+    <summary>Atau cari manual dari station code / nama site</summary>
+    <div class="grid" style="margin-top:10px">
+      <div><label for="jenis">Jenis WO</label><select id="jenis"><option value="CON">Construction</option><option value="PLN">PLN</option></select></div>
+      <div class="span2"><label for="vendor">Vendor / EPC</label><input id="vendor" list="vendors" placeholder="Klik lalu pilih vendor, atau ketik sebagian nama"><datalist id="vendors"></datalist></div>
+      <div class="full"><label for="codes">Tempel station code atau nama site, satu per baris</label><textarea id="codes" rows="4"></textarea></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="main" id="bLoad">Cari site</button></div>
+  </details>
+  <div id="stMsg" class="msg">Memuat data station...</div>
+  <div id="wrap" class="hide">
+    <div id="info" class="msg"></div>
+    <div id="rev" class="hide">
+      <div class="row" style="justify-content:space-between"><b id="rvTitle"></b><span id="rvPos"></span></div>
+      <div id="rvHow" style="font-size:13px;color:var(--mute)"></div>
+      <iframe id="rvMap" title="Peta lokasi" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="row">
+        <button id="rvPrev">Sebelumnya</button>
+        <button class="okb" id="rvOk">Sesuai, berikutnya</button>
+        <button class="badb" id="rvNo">Tidak sesuai</button>
+        <button id="rvNext">Lewati</button>
+        <a id="rvLink" target="_blank" rel="noopener">Buka link GMaps</a>
+      </div>
+      <input id="rvAlasan" placeholder="Alasan jika tidak sesuai (wajib)" style="margin-top:8px">
+    </div>
+    <div class="row" style="margin-bottom:10px"><button id="allOk">Tandai semua sesuai</button><button class="main" id="gen">Buat surat</button></div>
+    <div class="tbl"><table class="t"><thead><tr><th>No</th><th>Vendor</th><th>WO</th><th>Site</th><th>Station code</th><th>Profit center</th><th>Kode</th><th>Kota</th><th>Cek lokasi</th><th>Alasan jika tidak sesuai</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div id="err" class="msg err hide"></div>
+  </div>
+</section>
+<section class="panel hide" id="newCard">
+  <h2>Site baru satuan: buat station code dan profit center</h2>
+  <div class="msg">Aturan dari sheet RULES. Station code EVCS: <b>L.E.</b> + kode provinsi 3 huruf + nomor 4 digit. BSS: <b>B.</b> + kode provinsi + nomor 5 digit. Nomor urut berjalan per provinsi dan naik terus. Profit center EVCS: <b>48</b> + kode lokasi provinsi (2 digit) + y + 0 + 4 digit nomor. BSS: <b>49</b> + kode lokasi + y + 5 digit nomor. y = 3 (operasi sendiri) atau 8 (kerja sama). <span id="nCount"></span></div>
+  <div class="grid">
+    <div class="span2"><label for="nSite">Nama site</label><input id="nSite"></div>
+    <div><label for="nJenis">Jenis</label><select id="nJenis"><option value="EVCS">EVCS</option><option value="BSS">BSS</option></select></div>
+    <div><label for="nProj">Project name</label><input id="nProj" placeholder="Kosong = sama dengan nama site"></div>
+    <div class="span2"><label for="nProv">Provinsi</label><select id="nProv"></select></div>
+    <div><label for="nY">Digit y di profit center</label><select id="nY"><option value="3">3 (operasi sendiri)</option><option value="8">8 (kerja sama)</option></select></div>
+    <div class="full"><label for="nAddr">Alamat lengkap</label><input id="nAddr"></div>
+    <div><label for="nCity">Kota</label><input id="nCity"></div>
+    <div class="span2"><label for="nGmaps">Link GMaps atau koordinat</label><input id="nGmaps"></div>
+    <div><label for="nMach">Tipe mesin</label><input id="nMach" placeholder="Contoh: BSS 6S1P"></div>
+    <div><label for="nPower">Power</label><input id="nPower" placeholder="Contoh: 7.7 kVa"></div>
+    <div><label for="nPic">PIC di lokasi</label><input id="nPic"></div>
+    <div><label for="nBd">BD PIC</label><input id="nBd"></div>
+    <div><label>Station code baru</label><input id="nSC" readonly></div>
+    <div><label>Profit center baru</label><input id="nPC" readonly></div>
+  </div>
+  <div id="nErr" class="msg err hide"></div>
+  <div class="row" style="margin-top:10px"><button class="main" id="nSave">Simpan dan masukkan ke daftar site</button><button id="nClose">Tutup</button></div>
+</section>
+</div>
+<div class="view" id="v-sap">
+<div class="vh"><h1>Kode untuk SAP</h1><p>Isi nama site, jenis station, dan provinsi. Kode yang sudah ada dipakai, yang belum ada dibuatkan sesuai aturan RULES.</p></div>
+<section class="panel" id="sapCard">
+  <h2>Unggah daftar site</h2>
+  <div class="msg">Tidak perlu membuat surat. Unggah template berisi nama site, jenis station, dan provinsi. Site yang namanya sudah ada memakai kode yang tersedia, site yang belum ada dibuatkan kode baru. Kolom vendor dan jenis WO boleh dikosongkan.</div>
+  <div class="row"><a class="btn" href="template-site.xlsx" download>Unduh template</a><input id="sapFile" type="file" accept=".xlsx,.xls,.csv" style="width:auto"><button class="main hide" id="sapXls">Unduh Excel dan simpan kode baru</button></div>
+  <div id="sapInfo" class="msg hide"></div>
+  <div class="tbl"><table class="t hide" id="sapTbl"><thead><tr><th>No</th><th>Site</th><th>Jenis</th><th>Provinsi</th><th>Station code</th><th>Profit center</th><th>Status</th></tr></thead><tbody id="sapRows"></tbody></table></div>
+</section>
+</div>
+<div class="view" id="v-fix">
+<div class="vh"><h1>Koreksi provinsi</h1><p>Nomor urut tetap. Yang berubah hanya kode provinsi di station code dan kode lokasi di profit center.</p></div>
+<section class="panel" id="fixCard">
+  <h2>Koreksi provinsi station code</h2>
+  <div class="msg">Nomor urut tidak berubah. Yang berubah hanya kode provinsi di station code dan kode lokasi di profit center. Baris lama tidak diubah dan tidak dipindah, kode hasil koreksi ditambahkan sebagai baris baru di paling bawah.</div>
+  <h3 style="margin:14px 0 6px;font-size:15px">Koreksi banyak sekaligus</h3>
+  <div class="row"><a class="btn" href="template-koreksi.xlsx" download>Unduh template koreksi</a><input id="fixFile" type="file" accept=".xlsx,.xls,.csv" style="width:auto"><button class="main hide" id="fixXls">Unduh Excel dan simpan koreksi</button></div>
+  <div id="fixInfo" class="msg hide"></div>
+  <div class="tbl"><table class="t hide" id="fixTbl"><thead><tr><th>No</th><th>Site</th><th>Kode lama</th><th>Provinsi benar</th><th>Kode baru</th><th>Profit center lama</th><th>Profit center baru</th><th>Status</th></tr></thead><tbody id="fixRows"></tbody></table></div>
+  <h3 style="margin:18px 0 6px;font-size:15px">Koreksi satu per satu</h3>
+  <div class="grid">
+    <div class="span2"><label for="fOld">Station code yang mau dikoreksi</label><input id="fOld" placeholder="Contoh: L.E.ACH0001"></div>
+    <div><label>&nbsp;</label><button id="fFind">Cari</button></div>
+    <div class="full"><div id="fInfo" class="msg hide"></div></div>
+    <div class="span2"><label for="fProv">Provinsi yang benar</label><select id="fProv"></select></div>
+    <div></div>
+    <div><label>Station code hasil koreksi</label><input id="fSC" readonly></div>
+    <div><label>Profit center hasil koreksi</label><input id="fPC" readonly></div>
+  </div>
+  <div id="fErr" class="msg err hide"></div>
+  <div id="fOk" class="msg hide"></div>
+  <div class="row" style="margin-top:10px"><button class="main" id="fSave">Buat kode koreksi</button><button id="fClose">Tutup</button></div>
+</section>
+</div>
+<div class="view" id="v-hist">
+<div class="vh"><h1>Riwayat dan kode baru</h1><p>Surat yang sudah dibuat, serta kode baru dan hasil koreksi yang belum masuk ke stations.csv.</p></div>
+<section class="panel hide" id="newList">
+  <h2>Site baru dan koreksi buatan aplikasi</h2>
+  <div class="msg">Baris ini baru tersimpan di browser ini. Tambahkan ke bagian paling bawah <b>stations.csv</b> di GitHub supaya semua orang memakai kode yang sama. Sebelum itu dilakukan, orang lain yang membuat site baru bisa mendapat nomor urut yang sama.</div>
+  <div class="tbl"><table class="t"><thead><tr><th>Station code</th><th>Profit center</th><th>Site</th><th>Kota</th><th>Keterangan</th></tr></thead><tbody id="newRows"></tbody></table></div>
+  <div class="row" style="margin-top:10px"><button id="nCsv">Unduh CSV untuk stations.csv</button><button id="fCsv">Unduh pemetaan koreksi</button><button id="nClear" class="localonly">Kosongkan (sudah masuk stations.csv)</button></div>
+</section>
+<section class="panel">
+  <h2>Riwayat surat</h2>
+  <div class="tbl"><table class="t"><thead><tr><th>Nomor surat</th><th>Vendor</th><th>Site</th><th>Batal</th><th>Tanggal</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
+  <p id="histEmpty" class="msg">Belum ada surat.</p>
+</section>
+</div>
+  </main>
+</div>
+
+<div id="login" class="hide">
+  <div class="lbox">
+    <div class="lw">PATOK</div>
+    <p>Masuk untuk membuka data station.</p>
+    <label for="lgEmail">Email</label><input id="lgEmail" type="email" autocomplete="username">
+    <label for="lgPass" style="margin-top:12px">Kata sandi</label><input id="lgPass" type="password" autocomplete="current-password">
+    <div class="row" style="margin-top:16px"><button class="main" id="lgBtn">Masuk</button></div>
+    <div id="lgErr" class="msg err hide"></div>
+  </div>
+</div>
+<div id="sheet"></div>
+
+<script>
+var KEY="wo_v3",VKEY="wo_vendors",NKEY="wo_newst",FKEY="wo_fixes";
+var stations=[],lines=[],errs=[],vendors=[],cur=-1,lastMiss=[],fixOld=null,collapsed=0;
+var provs=[["Aceh","ACEH","ACE","01"],["Bali","BALI","BAL","02"],["Banten","BANTEN","BAN","03"],["Bengkulu","BENGKULU","BKL","04"],["Daerah Istimewa Yogyakarta","D.I. YOGYAKARTA","YOG","05"],["DKI Jakarta","DKI JAKARTA","JKT","06"],["Gorontalo","GORONTALO","GTO","07"],["Jambi","JAMBI","JAM","08"],["Jawa Barat","WEST JAVA","WJA","09"],["Jawa Tengah","CENTRAL JAVA","CJA","10"],["Jawa Timur","EAST JAVA","EJA","11"],["Kalimantan Barat","WEST KALIMANTAN","WKA","12"],["Kalimantan Selatan","SOUTH KALIMANTAN","SKA","13"],["Kalimantan Tengah","CENTRAL KALIMANTAN","CKA","14"],["Kalimantan Timur","EAST KALIMANTAN","EKA","15"],["Kalimantan Utara","NORTH KALIMANTAN","NKA","16"],["Kepulauan Bangka Belitung","BANGKA BELITUNG ISLANDS","BBI","17"],["Kepulauan Riau","RIAU ISLANDS","RIL","18"],["Lampung","LAMPUNG","LMP","19"],["Maluku","MALUKU","MLK","20"],["Maluku Utara","NORTH MALUKU","NML","21"],["Nusa Tenggara Barat","WEST NUSA TENGGARA","WNT","22"],["Nusa Tenggara Timur","EAST NUSA TENGGARA","ENT","23"],["Papua","PAPUA","PAP","24"],["Papua Barat Daya","SOUTHWEST PAPUA","SWP","25"],["Papua Barat","WEST PAPUA","WPP","26"],["Papua Pegunungan","HIGHLAND PAPUA","HLP","27"],["Papua Selatan","SOUTH PAPUA","SOP","28"],["Papua Tengah","CENTRAL PAPUA","CPA","29"],["Riau","RIAU","RIA","30"],["Sulawesi Barat","WEST SULAWESI","WSL","31"],["Sulawesi Selatan","SOUTH SULAWESI","SSL","32"],["Sulawesi Tengah","CENTRAL SULAWESI","CSL","33"],["Sulawesi Tenggara","SOUTHEAST SULAWESI","SSE","34"],["Sulawesi Utara","NORTH SULAWESI","NSL","35"],["Sumatera Barat","WEST SUMATRA","WSM","36"],["Sumatera Selatan","SOUTH SUMATRA","SSM","37"],["Sumatera Utara","NORTH SUMATRA","NSM","38"]];
+var $=function(i){return document.getElementById(i)};
+var FIELDS=["station_code","profit_center","project_name","site_name","address","city","gmaps","machine_type","power","pic","bd_pic","provinsi","epc"];
+var MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var ROM=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+var SCRE=/^(L\.E\.|B\.)([A-Z]{3})(\d+)$/i;
+// Contoh data. Ganti dengan stations.csv di repo yang sama.
+var SAMPLE="station_code,profit_center,project_name,site_name,address,city,gmaps,machine_type,power,pic,bd_pic,latitude,longitude\n"+
+"L.E.CJA1568,4810301568,Garasi Gubernur,Garasi Gubernur,\"8J7P+2FG, Cantelan, Belang Wetan, Klaten Utara, Klaten Regency, Central Java 57438\",Klaten,https://maps.app.goo.gl/qbyG1i5Q35GbG4AY9,DC 30,,,,,\n"+
+"B.CJA01226,4910301226,Garasi Gubernur,Garasi Gubernur,\"8J7P+2FG, Cantelan, Belang Wetan, Klaten Utara, Klaten Regency, Central Java 57438\",Klaten,https://maps.app.goo.gl/qbyG1i5Q35GbG4AY9,BSS 12S3P,,,,,\n"+
+"B.JKT02335,4906302335,Warkop Legends 878,Warkop Legends 878,\"Jl. Bambu Wulung No.38, RT.7/RW.5, Bambu Apus, Kec. Cipayung, Jakarta Timur 13890\",Jakarta Timur,https://maps.app.goo.gl/n4UqsUNFYpNoyx7a9,BSS 12S1P,,,,,\n";
+
+var CFG=window.PATOK_CONFIG||{};
+var DBMODE=!!(CFG.url&&CFG.anonKey&&window.supabase&&window.supabase.createClient);
+var sb=DBMODE?window.supabase.createClient(CFG.url,CFG.anonKey):null;
+var WOS=[],FIXES=[],lastId=0,userId=null;
+document.body.classList.toggle("db",DBMODE);
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function fmt(s){var d=new Date(s+"T00:00:00");return String(d.getDate()).padStart(2,"0")+" "+MON[d.getMonth()]+" "+d.getFullYear()}
+function days(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/864e5)+1}
+function loadWO(){if(DBMODE)return WOS;try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function saveWO(a){if(DBMODE)return;try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+function norm(s){return String(s).toLowerCase().replace(/\[[^\]]*\]/g," ").replace(/[^a-z0-9]+/g," ").trim()}
+
+function parseCSV(t,req){
+  var rows=t.replace(/^\uFEFF/,"").trim().split(/\r?\n/).map(function(l){var o=[],c="",q=false;
+    for(var i=0;i<l.length;i++){var ch=l[i];
+      if(ch=='"'){if(q&&l[i+1]=='"'){c+='"';i++}else q=!q}else if(ch==","&&!q){o.push(c);c=""}else c+=ch}
+    o.push(c);return o});
+  var h=rows.shift().map(function(x){return x.trim()});
+  return rows.map(function(r){var o={};h.forEach(function(k,i){o[k]=(r[i]||"").trim()});return o}).filter(function(o){return o[req||"station_code"]});
+}
+function prep(a){
+  a.forEach(function(s){
+    FIELDS.forEach(function(k){s[k]=s[k]||""});
+    if(!s.gmaps&&s.latitude&&s.longitude)s.gmaps="https://www.google.com/maps?q="+s.latitude+","+s.longitude;
+    if(!s.site_name)s.site_name=s.project_name;
+  });return a;
+}
+function localNew(){if(DBMODE)return stations.filter(function(s){return s.source==="app"});try{return JSON.parse(localStorage.getItem(NKEY))||[]}catch(e){return[]}}
+function saveNew(a){if(DBMODE)return;try{localStorage.setItem(NKEY,JSON.stringify(a))}catch(e){}}
+function localFix(){if(DBMODE)return FIXES;try{return JSON.parse(localStorage.getItem(FKEY))||[]}catch(e){return[]}}
+function saveFix(a){if(DBMODE)return;try{localStorage.setItem(FKEY,JSON.stringify(a))}catch(e){}}
+function setStations(a){stations=DBMODE?prep(a):prep(a).concat(prep(localNew()));drawNew()}
+if(!DBMODE){
+  fetch("stations.csv").then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){
+    setStations(parseCSV(t));$("stMsg").textContent="Data station dimuat dari stations.csv: "+stations.length+" baris."
+  }).catch(function(){
+    setStations(parseCSV(SAMPLE));$("stMsg").textContent="stations.csv belum ada, memakai 3 baris contoh. Taruh stations.csv di repo untuk memakai data asli."
+  });
+}
+
+/* ===== Database (Supabase) ===== */
+var STCOLS="id,station_code,profit_center,project_name,site_name,address,city,gmaps,machine_type,power,pic,bd_pic,provinsi,epc,source";
+function plain(s){var o={};FIELDS.forEach(function(k){o[k]=s[k]==null?"":s[k]});o.latitude=s.latitude||"";o.longitude=s.longitude||"";return o}
+function dbErr(e){var m=new Error(e.message||String(e));m.code=e.code;m.konflik=/KONFLIK/.test(m.message);m.dupWO=e.code==="23505";return m}
+async function dbLoadStations(progress){
+  var c=await sb.from("stations").select("id",{count:"exact",head:true});
+  if(c.error)throw dbErr(c.error);
+  var total=c.count||0,size=1000,pages=Math.ceil(total/size),out=[];
+  for(var i=0;i<pages;i+=6){
+    var batch=[];
+    for(var j=i;j<Math.min(i+6,pages);j++)batch.push(sb.from("stations").select(STCOLS).order("id").range(j*size,j*size+size-1));
+    var res=await Promise.all(batch);
+    for(var k=0;k<res.length;k++){if(res[k].error)throw dbErr(res[k].error);out=out.concat(res[k].data)}
+    if(progress)progress(out.length,total);
+  }
+  return out;
+}
+async function syncStations(){
+  if(!DBMODE)return;
+  var more=true;
+  while(more){
+    var r=await sb.from("stations").select(STCOLS).gt("id",lastId).order("id").limit(1000);
+    if(r.error)throw dbErr(r.error);
+    prep(r.data).forEach(function(s){stations.push(s);if(s.id>lastId)lastId=s.id});
+    more=r.data.length===1000;
+  }
+}
+async function dbLoadWOs(){
+  var out=[],from=0;
+  for(;;){
+    var r=await sb.from("work_orders").select("*").order("id").range(from,from+999);
+    if(r.error)throw dbErr(r.error);
+    out=out.concat(r.data);if(r.data.length<1000)break;from+=1000;
+  }
+  WOS=out.map(function(x){return{id:x.id,no:x.no,jenis:x.jenis,vendor:x.vendor,tgl:x.tgl,mulai:x.mulai,selesai:x.selesai,seq:x.seq,ref:x.ref||"",ttd:x.ttd,jab:x.jab,
+    lines:x.lines||[],batal:x.batal||[],dibuat:x.created_at,mine:x.created_by===userId}});
+}
+async function persistStations(rows){
+  if(!rows.length)return;
+  if(!DBMODE){var nl=localNew();rows.forEach(function(s){nl.push(s);stations.push(prep([s])[0])});saveNew(nl);return}
+  var r=await sb.rpc("save_stations",{rows:rows.map(plain)});
+  if(r.error)throw dbErr(r.error);
+  await syncStations();
+}
+async function persistFixes(arr){
+  if(!arr.length)return;
+  if(!DBMODE){var f=localFix();arr.forEach(function(x){f.push(x)});saveFix(f);return}
+  var r=await sb.from("fixes").insert(arr);
+  if(r.error)throw dbErr(r.error);
+  arr.forEach(function(x){FIXES.push(x)});
+}
+async function persistWOs(ws){
+  if(!DBMODE){var all=loadWO();ws.forEach(function(w){all.push(w)});saveWO(all);return}
+  var payload=ws.map(function(w){return{no:w.no,jenis:w.jenis,vendor:w.vendor,tgl:w.tgl,mulai:w.mulai,selesai:w.selesai,seq:w.seq,ref:w.ref,ttd:w.ttd,jab:w.jab,
+    lines:w.lines.map(plain),batal:w.batal.map(function(b){return{s:plain(b.s),alasan:b.alasan}})}});
+  var r=await sb.from("work_orders").insert(payload).select();
+  if(r.error)throw dbErr(r.error);
+  r.data.forEach(function(x,i){ws[i].id=x.id;ws[i].mine=true;WOS.push(ws[i])});
+}
+// Pesan untuk kegagalan simpan. Mengembalikan teks yang ditampilkan ke pengguna.
+async function saveFailText(e){
+  if(e.konflik){try{await syncStations()}catch(x){}return "Ada kode yang baru saja dipakai orang lain. Data sudah disegarkan, unggah ulang file supaya kode dihitung ulang."}
+  if(e.dupWO){return "Nomor surat sudah dipakai orang lain. Nomor urut sudah diperbarui, klik Buat surat lagi."}
+  return "Gagal menyimpan ke database: "+(e.message||e);
+}
+
+/* ===== Vendor ===== */
+function localVendors(){try{return JSON.parse(localStorage.getItem(VKEY))||[]}catch(e){return[]}}
+function fillVendors(){
+  var seen={},out=[];
+  vendors.concat(localVendors()).forEach(function(v){var k=v.toLowerCase();if(v&&!seen[k]){seen[k]=1;out.push(v)}});
+  out.sort(function(a,b){return a.localeCompare(b)});
+  $("vendors").innerHTML=out.map(function(v){return '<option value="'+esc(v)+'">'}).join("");
+}
+function rememberVendor(v){
+  var all=vendors.concat(localVendors());
+  if(all.some(function(x){return x.toLowerCase()===v.toLowerCase()}))return;
+  if(DBMODE){vendors.push(v);fillVendors();sb.from("vendors").upsert({name:v},{onConflict:"name",ignoreDuplicates:true}).then(function(){});return}
+  var l=localVendors();l.push(v);
+  try{localStorage.setItem(VKEY,JSON.stringify(l))}catch(e){}
+  fillVendors();
+}
+if(!DBMODE)fetch("vendors.txt").then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){
+  vendors=t.replace(/^\uFEFF/,"").split(/\r?\n/).map(function(x){return x.trim()}).filter(Boolean);
+}).catch(function(){vendors=[]}).then(fillVendors);
+
+/* ===== Data surat ===== */
+function woNumber(j,t,ref,q){
+  var d=new Date(t+"T00:00:00"),n=String(q).padStart(4,"0"),R=ROM[d.getMonth()];
+  if(j==="CON")return "VGID-WO/BD/"+d.getFullYear()+"/"+R+"/"+n;
+  return "VGID-WO/WOPLN"+ref+"/"+d.getFullYear()+"/"+R+"/"+n;
+}
+function upd(){
+  var a=$("mulai").value,b=$("selesai").value;
+  $("dur").value=(a&&b&&b>=a)?days(a,b)+" hari":"";
+}
+function autoSeq(){
+  ["CON","PLN"].forEach(function(j){
+    var l=loadWO().filter(function(w){return w.jenis===j});
+    if(l.length)$("seq"+j).value=Math.max.apply(null,l.map(function(w){return +w.seq}))+1;
+  });
+}
+["tgl","mulai","selesai"].forEach(function(i){$(i).addEventListener("input",upd)});
+$("tgl").value=today();$("mulai").value=today();upd();autoSeq();
+
+/* ===== Aturan station code dan profit center ===== */
+function typeOf(m){return m[1].toUpperCase()==="L.E."?"EVCS":"BSS"}
+function eachSt(extra,fn){stations.forEach(fn);(extra||[]).forEach(fn)}
+function nextNum(j,area,extra){
+  var mx=0;
+  eachSt(extra,function(s){
+    var m=SCRE.exec(s.station_code);
+    if(m&&typeOf(m)===j&&m[2].toUpperCase()===area)mx=Math.max(mx,parseInt(m[3],10));
+  });
+  return mx+1;
+}
+// Jika profit center sudah dipakai, huruf A sampai Z menggantikan digit pertama zzzzz (aturan di sheet RULES).
+function freePC(pc,extra){
+  var u={};eachSt(extra,function(s){if(s.profit_center)u[s.profit_center]=1});
+  if(!u[pc])return pc;
+  for(var i=0;i<26;i++){var c=pc.slice(0,5)+String.fromCharCode(65+i)+pc.slice(6);if(!u[c])return c}
+  return null;
+}
+function genCode(j,p,y,extra){
+  var n=nextNum(j,p[2],extra),num=String(n).padStart(j==="EVCS"?4:5,"0");
+  var sc=(j==="EVCS"?"L.E.":"B.")+p[2]+num;
+  var z=j==="EVCS"?"0"+num.slice(-4):num;
+  var pc=freePC((j==="EVCS"?"48":"49")+p[3]+y+z,extra);
+  return pc?{sc:sc,pc:pc}:null;
+}
+function pcFor(sc,y){
+  var m=SCRE.exec(sc);if(!m)return "";
+  var p=provs.filter(function(x){return x[2]===m[2].toUpperCase()})[0];if(!p)return "";
+  var j=typeOf(m),num=m[3];
+  return (j==="EVCS"?"48":"49")+p[3]+y+(j==="EVCS"?"0"+num.slice(-4):num.padStart(5,"0"));
+}
+function pkey(s){return norm(s).replace(/sumatera/g,"sumatra").replace(/ /g,"")}
+function findProv(t){
+  var n=pkey(t);if(!n)return -1;
+  for(var i=0;i<provs.length;i++){var p=provs[i];if(pkey(p[0])===n||pkey(p[1])===n||p[2].toLowerCase()===n)return i}
+  return -1;
+}
+
+/* ===== Koordinat dan peta ===== */
+function parseCoord(t){
+  t=String(t||"");
+  var m=t.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||t.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||
+    t.match(/[?&](?:q|ll|query)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i)||t.match(/^\s*(-?\d{1,2}\.\d+)\s*[,; ]\s*(-?\d{1,3}\.\d+)\s*$/);
+  if(!m)return null;
+  var la=+m[1],lo=+m[2];
+  return(la>-12&&la<7&&lo>94&&lo<142)?{lat:la,lng:lo}:null;
+}
+function mapInfo(r){
+  var s=r.s;
+  if(r.coords)return{src:"https://maps.google.com/maps?q="+r.coords.lat+","+r.coords.lng+"&z=17&output=embed",how:"Pin diambil dari koordinat di kolom GMaps."};
+  var q=[s.address,s.city].filter(Boolean).join(", ")||[s.site_name,s.city].filter(Boolean).join(", ");
+  return{src:"https://maps.google.com/maps?q="+encodeURIComponent(q)+"&z=16&output=embed",how:"Posisi diperkirakan dari alamat, bukan dari link. Link GMaps pendek tidak bisa dibaca aplikasi, jadi klik Buka link GMaps untuk melihat pin aslinya."};
+}
+
+/* ===== Daftar baris dan cek lokasi ===== */
+function showInfo(t){$("wrap").classList.remove("hide");$("info").textContent=t}
+function draw(){
+  $("rows").innerHTML=lines.map(function(r,i){var s=r.s;
+    return '<tr data-i="'+i+'"'+(i===cur?' class="sel"':'')+'><td>'+(i+1)+'</td><td>'+esc(r.vendor)+'</td><td>'+r.wo+'</td><td>'+esc(s.site_name)+'</td><td>'+esc(s.station_code)+'</td><td class="pc">'+esc(s.profit_center)+'</td><td>'+esc(r.note)+'</td><td>'+esc(s.city)+'</td>'+
+    '<td><select class="vsel"><option value="">Belum dicek</option><option value="ok"'+(r.v==="ok"?" selected":"")+'>Sesuai</option><option value="no"'+(r.v==="no"?" selected":"")+'>Tidak sesuai</option></select></td>'+
+    '<td><input class="alasan" value="'+esc(r.alasan)+'"'+(r.v==="no"?"":" disabled")+' placeholder="Wajib jika tidak sesuai" style="min-width:190px"></td></tr>';
+  }).join("");
+}
+function setCur(i){
+  cur=i;var r=lines[i];
+  $("rev").classList.toggle("hide",!r);
+  if(!r){draw();return}
+  var mi=mapInfo(r);
+  $("rvTitle").textContent=r.s.site_name+" | "+r.s.station_code+" | "+r.s.profit_center;
+  $("rvPos").textContent=(i+1)+" dari "+lines.length;
+  $("rvHow").textContent=mi.how+(r.s.address?" Alamat: "+r.s.address:"");
+  if($("rvMap").getAttribute("src")!==mi.src)$("rvMap").setAttribute("src",mi.src);
+  var g=r.s.gmaps;
+  $("rvLink").style.display=g?"":"none";
+  if(g)$("rvLink").href=/^https?:/i.test(g)?g:"https://www.google.com/maps?q="+encodeURIComponent(g);
+  $("rvAlasan").value=r.alasan;
+  draw();
+}
+function advance(){
+  for(var k=1;k<=lines.length;k++){var j=(cur+k)%lines.length;if(lines[j].v===""){setCur(j);return}}
+  setCur(cur);
+}
+$("rvOk").onclick=function(){if(cur<0)return;lines[cur].v="ok";lines[cur].alasan="";advance()};
+$("rvNo").onclick=function(){
+  if(cur<0)return;var a=$("rvAlasan").value.trim();
+  if(!a){$("rvAlasan").focus();$("rvAlasan").placeholder="Isi alasan dulu, lalu klik Tidak sesuai lagi";return}
+  lines[cur].v="no";lines[cur].alasan=a;advance();
+};
+$("rvPrev").onclick=function(){if(cur>0)setCur(cur-1)};
+$("rvNext").onclick=function(){if(cur<lines.length-1)setCur(cur+1)};
+$("rows").addEventListener("change",function(e){
+  if(!e.target.classList.contains("vsel"))return;
+  var r=lines[e.target.closest("tr").dataset.i];r.v=e.target.value;if(r.v!=="no")r.alasan="";draw();
+});
+$("rows").addEventListener("input",function(e){
+  if(e.target.classList.contains("alasan"))lines[e.target.closest("tr").dataset.i].alasan=e.target.value;
+});
+$("rows").addEventListener("click",function(e){
+  if(/SELECT|INPUT|OPTION|A/.test(e.target.tagName))return;
+  var tr=e.target.closest("tr");if(tr)setCur(+tr.dataset.i);
+});
+$("allOk").onclick=function(){lines.forEach(function(r){r.v="ok";r.alasan=""});draw()};
+
+/* ===== Cari manual ===== */
+function latest(r){
+  var m={};
+  function key(s){return norm(s.site_name)+"|"+norm(s.machine_type)}
+  r.forEach(function(s){m[key(s)]=s});
+  var o=r.filter(function(s){return m[key(s)]===s});
+  collapsed+=r.length-o.length;return o;
+}
+function findRows(t){
+  var k=t.toLowerCase(),n=norm(t);
+  var r=stations.filter(function(s){return s.station_code.toLowerCase()===k});
+  if(r.length)return r;
+  r=stations.filter(function(s){return norm(s.site_name)===n||norm(s.project_name)===n});
+  if(r.length)return latest(r);
+  if(n.length>=4)r=stations.filter(function(s){return norm(s.site_name).indexOf(n)>-1||norm(s.project_name).indexOf(n)>-1});
+  return latest(r);
+}
+function tokens(t){
+  var seen={},out=[];
+  t.split(/\r?\n/).forEach(function(l){
+    var c=l.split(/[\t;]/)[0].trim(),k=c.toLowerCase();
+    if(!c||seen[k]||["station_code","station code","site_name","site name","project name","no"].indexOf(k)>-1)return;
+    seen[k]=1;out.push(c);
+  });
+  return out;
+}
+$("bLoad").onclick=async function(){
+  try{await syncStations()}catch(x){}
+  var miss=[],seen={};lines=[];errs=[];collapsed=0;lastMiss=miss;
+  tokens($("codes").value).forEach(function(t){
+    var r=findRows(t);if(!r.length){miss.push(t);return}
+    r.forEach(function(s){var k=s.station_code+"|"+s.site_name;if(seen[k])return;seen[k]=1;
+      lines.push({s:s,vendor:$("vendor").value.trim(),wo:$("jenis").value,isNew:false,note:"Sudah ada",coords:parseCoord(s.gmaps),v:"",alasan:""})});
+  });
+  showInfo(lines.length+" baris station ditemukan."+(collapsed?" "+collapsed+" baris lama diabaikan karena site yang sama punya baris lebih baru (kode yang dipilih langsung tetap dipakai apa adanya).":"")+(miss.length?" Tidak ditemukan ("+miss.length+"): "+miss.join(", ")+". Klik Buat site baru satuan untuk membuatkan station code dan profit center-nya.":""));
+  $("err").classList.add("hide");setCur(lines.length?0:-1);
+};
+
+/* ===== Unggah template ===== */
+function rowGet(r,keys){
+  for(var k in r){var h=k.toLowerCase().trim();for(var i=0;i<keys.length;i++)if(h.indexOf(keys[i])===0)return String(r[k]==null?"":r[k]).trim()}
+  return "";
+}
+function similar(site,jt){
+  var t=norm(site).split(" ").filter(function(w){return w.length>1});
+  if(t.length<2)return null;
+  var best=null,bs=0;
+  stations.forEach(function(x){
+    var m=SCRE.exec(x.station_code);if(!m||typeOf(m)!==jt)return;
+    var u=x._t||(x._t=norm(x.site_name).split(" ").filter(function(w){return w.length>1}));
+    if(u.length<2)return;
+    var inter=0;t.forEach(function(w){if(u.indexOf(w)>-1)inter++});
+    var sc=inter/(t.length+u.length-inter);
+    if(sc>bs){bs=sc;best=x}
+  });
+  return bs>=0.7?best:null;
+}
+function buildFromRows(rows,opt){
+  opt=opt||{};
+  var batch=[],out=[],bad=[];
+  rows.forEach(function(r,i){
+    var g=function(){return rowGet(r,Array.prototype.slice.call(arguments))};
+    var site=g("site name","nama site"),vendor=g("vendor"),wt=g("jenis wo");
+    if(!site&&!vendor&&!g("station code"))return;
+    var woT=/pln/i.test(wt)?"PLN":(/con|konst/i.test(wt)?"CON":""),why="";
+    var jt=/bss|battery|swap/i.test(g("jenis station"))?"BSS":(/evcs|ev|charg/i.test(g("jenis station"))?"EVCS":"");
+    var y=/kerja|bcc|coop/i.test(g("skema"))?"8":"3";
+    var pi=findProv(g("provinsi"));
+    var s={station_code:"",profit_center:"",project_name:g("project")||site,site_name:site,address:g("alamat"),city:g("kota"),gmaps:g("gmaps"),
+      machine_type:g("tipe mesin"),power:g("power"),pic:g("pic di lokasi"),bd_pic:g("bd pic"),latitude:"",longitude:"",
+      provinsi:pi>=0?provs[pi][0]:g("provinsi"),epc:vendor};
+    var isNew=false,note="";
+    if(!site)why="nama site kosong";
+    else if(!opt.sap&&!vendor)why="vendor kosong";
+    else if(!opt.sap&&!woT)why="Jenis WO belum diisi (CONS atau PLN)";
+    if(!why){
+      var sc=g("station code").toUpperCase();
+      if(sc){
+        if(!SCRE.exec(sc))why="format station code tidak dikenal";
+        else{
+          var base=stations.filter(function(x){return x.station_code.toUpperCase()===sc}).pop();
+          s.station_code=sc;s.profit_center=g("profit center")||(base&&base.profit_center)||pcFor(sc,y);
+          note=base?"Sudah ada":"Kode dari file, tidak ada di master";
+        }
+      }else{
+        if(!jt)why="Jenis Station belum diisi (EVCS atau BSS)";
+        else if(pi<0)why="provinsi kosong atau tidak dikenali";
+        else{
+          var p=provs[pi];
+          // Aturan di Excel: nama sama = satu station code. Kalau ada lebih dari satu, pilih yang provinsinya sama.
+          var cand=stations.concat(batch).filter(function(x){var m=SCRE.exec(x.station_code);return m&&typeOf(m)===jt&&norm(x.site_name)===norm(site)});
+          var ex=cand.filter(function(x){return SCRE.exec(x.station_code)[2].toUpperCase()===p[2]}).pop()||cand.pop();
+          if(ex){
+            s.station_code=ex.station_code;s.profit_center=ex.profit_center;note="Sudah ada";
+            var ar=SCRE.exec(ex.station_code)[2].toUpperCase();
+            if(ar!==p[2])note+=" (kode provinsi lama "+ar+", file "+p[2]+")";
+          }else{
+            var c=genCode(jt,p,y,batch);
+            if(!c)why="profit center penuh (A sampai Z sudah terpakai)";
+            else{
+              s.station_code=c.sc;s.profit_center=c.pc;isNew=true;
+              var sm=similar(site,jt);
+              note="Baru"+(sm?" (mirip: "+sm.site_name+" / "+sm.station_code+")":"");
+              batch.push({station_code:c.sc,profit_center:c.pc,site_name:site});
+            }
+          }
+        }
+      }
+    }
+    if(why)bad.push("baris "+(i+2)+" ("+(site||"tanpa nama")+"): "+why);
+    else out.push({s:s,vendor:vendor,wo:woT,jt:jt,isNew:isNew,note:note,coords:parseCoord(s.gmaps),v:"",alasan:""});
+  });
+  if(opt.sap)return{out:out,bad:bad};
+  lines=out;errs=bad;
+  var nb=out.filter(function(x){return x.isNew}).length,vs={};out.forEach(function(x){vs[x.wo+"|"+x.vendor]=1});
+  showInfo(out.length+" baris siap dicek untuk "+Object.keys(vs).length+" surat ("+nb+" kode baru dibuat, "+(out.length-nb)+" sudah ada)."+(bad.length?" "+bad.length+" baris dilewati: "+bad.join("; "):""));
+  $("err").classList.add("hide");setCur(out.length?0:-1);
+}
+$("bfile").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  if(typeof XLSX==="undefined"){showInfo("Pustaka Excel gagal dimuat. Cek koneksi internet lalu muat ulang halaman.");return}
+  var rd=new FileReader();
+  rd.onload=async function(){
+    try{await syncStations()}catch(x){}
+    try{
+      var wb=XLSX.read(rd.result,{type:"array"});
+      buildFromRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:"",raw:false}));
+    }catch(x){showInfo("File tidak bisa dibaca. Pastikan memakai template yang disediakan.")}
+    e.target.value="";
+  };
+  rd.readAsArrayBuffer(f);
+};
+
+/* ===== Buat surat ===== */
+function fail(m){var e=$("err");e.textContent=m;e.classList.remove("hide")}
+$("gen").onclick=async function(){
+  if(!lines.length)return fail("Belum ada site.");
+  if(!$("tgl").value||!$("mulai").value||!$("selesai").value)return fail("Isi tanggal surat, mulai, dan selesai kerja.");
+  if($("selesai").value<$("mulai").value)return fail("Tanggal selesai lebih awal dari tanggal mulai.");
+  var belum=lines.filter(function(r){return r.v===""}).length;
+  if(belum)return fail(belum+" baris belum dicek lokasinya. Pilih Sesuai atau Tidak sesuai.");
+  if(lines.some(function(r){return r.v==="no"&&!r.alasan.trim()}))return fail("Ada baris tidak sesuai yang alasannya masih kosong.");
+  var okL=lines.filter(function(r){return r.v==="ok"});
+  if(!okL.length)return fail("Semua baris dibatalkan, tidak ada site untuk dimasukkan ke surat.");
+  if(okL.some(function(r){return !r.vendor}))return fail("Ada baris yang vendornya kosong. Isi vendor di bagian cari manual.");
+  var hasPLN=okL.some(function(r){return r.wo==="PLN"}),hasCON=okL.some(function(r){return r.wo==="CON"});
+  if(hasPLN&&!$("ref").value.trim())return fail("Isi kode setelah WOPLN untuk surat PLN.");
+  if(hasPLN&&!$("seqPLN").value)return fail("Isi nomor urut awal surat PLN.");
+  if(hasCON&&!$("seqCON").value)return fail("Isi nomor urut awal surat Construction.");
+  var order=[],G={};
+  lines.forEach(function(r){var k=r.wo+"|"+r.vendor;if(!G[k]){G[k]={wo:r.wo,vendor:r.vendor,ok:[],no:[]};order.push(k)}
+    (r.v==="ok"?G[k].ok:G[k].no).push(r)});
+  var seq={CON:+$("seqCON").value,PLN:+$("seqPLN").value},made=[],orphan=0;
+  order.forEach(function(k){
+    var g=G[k];if(!g.ok.length){orphan+=g.no.length;return}
+    var q=seq[g.wo]++;
+    var w={no:woNumber(g.wo,$("tgl").value,$("ref").value.trim(),q),jenis:g.wo,vendor:g.vendor,tgl:$("tgl").value,mulai:$("mulai").value,selesai:$("selesai").value,
+      seq:q,ref:$("ref").value.trim(),ttd:$("ttdNama").value,jab:$("ttdJab").value,
+      lines:g.ok.map(function(r){return r.s}),batal:g.no.map(function(r){return{s:r.s,alasan:r.alasan.trim()}}),dibuat:new Date().toISOString()};
+    made.push(w);
+  });
+  try{
+    await persistStations(okL.filter(function(r){return r.isNew}).map(function(r){return r.s}));
+    await persistWOs(made);
+  }catch(e){
+    var tx=await saveFailText(e);
+    if(e.dupWO){try{await dbLoadWOs();autoSeq()}catch(x){}}
+    return fail(tx);
+  }
+  made.forEach(function(w){rememberVendor(w.vendor)});
+  drawNew();autoSeq();
+  lines=[];errs=[];cur=-1;$("codes").value="";$("wrap").classList.add("hide");$("err").classList.add("hide");
+  hist();show(made);
+};
+
+function letter(w){
+  var con=w.jenis==="CON",n=days(w.mulai,w.selesai);
+  var rows=[["Nama Perusahaan / <i>Company Name</i>","<b>"+esc(w.vendor)+"</b>"],
+    ["Jenis Pekerjaan / <i>Type of Work</i>",con?"Penugasan Pekerjaan untuk Pembangunan Charging Station<br><i>Work Assignment for the Construction of Charging Stations</i>":"PLN Installation &amp; Connection"]];
+  if(!con)rows.push(["NIDI SLO Name","VGreen Global Charging Station Investment Indonesia"]);
+  rows.push(["Lokasi Pekerjaan / <i>Work Location</i>","<b>Attached</b> ("+w.lines.length+" baris station)"]);
+  rows.push(["Jangka Waktu Pekerjaan / <i>Work Duration</i>",n+" Days ("+fmt(w.mulai)+" – "+fmt(w.selesai)+")"]);
+  var hd='<table class="hd">'+rows.map(function(r,i){return '<tr><td class="n">'+(i+1)+'.</td><td class="l">'+r[0]+'</td><td>: '+r[1]+'</td></tr>'}).join("")+'</table>';
+  var k=rows.length,spec,rep;
+  if(con){
+    spec='<ol type="a"><li>Pembangunan stasiun pengisian daya kendaraan listrik<br><i>Construction of electric vehicle charging stations</i></li>'+
+     '<li>Instalasi sistem kelistrikan dan keamanan, termasuk pengajuan daya listrik baru, bilamana diperlukan<br><i>Installation of electrical and security systems, including applying for new electrical power if needed</i></li>'+
+     '<li>Pengujian dan konektifitas<br><i>Testing and connectivity</i></li></ol>';
+    rep='<ol type="a"><li>Jika proses kontruksi sudah selesai maka lampirkan hasil pekerjaan.<br><i>If the construction process is complete, then attach the work results.</i></li>'+
+     '<li>Jika proses instalasi sudah selesai maka lampirkan hasil pekerjaan.<br><i>If the installation process is complete, then attach work results.</i></li>'+
+     '<li>Setelah semua pekerjaan selesai (Konstruksi dan Instalasi) dan dilakukan percobaan dan konektifitasnya sudah sesuai. Maka, Para Pihak harus melaksanakan proses serah terima secara formal sesuai dengan ketentuan dalam Perjanjian dan peraturan perundang-undangan Indonesia yang berlaku, termasuk namun tidak terbatas pada penandatanganan Berita Acara Serah Terima.<br><i>After all work is completed (Construction and Installation) and trials are carried out and the connectivity is appropriate. Then, the Parties must carry out a formal handover process in accordance with the provisions in the Agreement and applicable Indonesian laws and regulations, including but not limited to signing the Handover Report.</i></li></ol>';
+  }else{
+    spec='<ol type="a"><li>PLN Installation &amp; Connection:<br><i>Certificate NIDI<br>Certificate SLO<br>Service PLN Connection<br>Go Live</i></li></ol>';
+    rep='<ol type="a"><li>Membuat laporan yang mencakup temuan dari seluruh analisis dan rekomendasi mengenai kelayakan lokasi.<br><i>Produce a report that includes the findings of all analyses and recommendations on site feasibility.</i></li>'+
+     '<li>Memberikan penawaran harga pengerjaan terperinci yang diperlukan serta estimasi waktu pengerjaan.<br><i>Provide a detailed quote for the workmanship and material costs (if any) required as well as an estimate of the work time.</i></li></ol>';
+  }
+  var cols=[["No",null],["Project Name","project_name"],["Site Name","site_name"],["Station Code","station_code"],["Profit Center","profit_center"],["Full Address","address"],["City","city"],["GMaps","gmaps"],["Machine Type","machine_type"],["Power","power"],["PIC at Location","pic"],["BD PIC","bd_pic"]]
+    .filter(function(c){return !c[1]||w.lines.some(function(s){return s[c[1]]})});
+  var lamp='<div class="lamp"><div class="logo">V-GREEN</div><table><thead><tr>'+cols.map(function(c){return '<th>'+c[0]+'</th>'}).join("")+'</tr></thead><tbody>'+
+    w.lines.map(function(s,i){return '<tr>'+cols.map(function(c){
+      if(!c[1])return '<td class="c">'+(i+1)+'</td>';
+      var v=s[c[1]];
+      if(c[1]==="gmaps")return '<td>'+(v?'<a href="'+esc(v)+'">'+esc(v)+'</a>':"")+'</td>';
+      return '<td'+(c[1]==="profit_center"||c[1]==="station_code"?' class="c"':"")+'>'+esc(v)+'</td>';
+    }).join("")+'</tr>'}).join("")+'</tbody></table></div>';
+  return '<div class="wo"><div class="logo"><img src="logo.png" alt="" onerror="this.style.display=\'none\'">V-GREEN</div>'+
+   '<div class="ttl"><b>Surat Perintah Kerja</b><br><i><b>Work Order Letter</b></i><br>No. '+esc(w.no)+'</div>'+
+   '<p>Dengan Hormat,<br><i>Sincerely</i>,</p>'+
+   '<p>Sehubungan dengan kebutuhan perusahaan untuk melakukan pembangunan charging stations, dengan ini kami memberikan perintah kerja untuk melakukan pekerjaan sebagai berikut:<br><i>In relation to the company\'s need to build charging stations, we hereby issue a work order to perform the following tasks:</i></p>'+
+   '<p>Tugas yang diberikan / <i>Assigned Tasks</i>:</p>'+hd+
+   '<p>'+(k+1)+'. Spesifikasi Pekerjaan / <i>Work Specifications</i>:</p>'+spec+
+   '<p>'+(k+2)+'. Laporan / <i>Reporting</i>:</p>'+rep+
+   '<p>Demikian Surat Perintah Kerja ini dibuat untuk dilaksanakan sesuai dengan ketentuan yang berlaku. Harap segera melapor setelah pekerjaan selesai dilaksanakan. Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.<br><i>This Work Order is issued to be executed in accordance with the applicable provisions. Please report upon completion of the work. Thank you for your attention and cooperation.</i></p>'+
+   '<p>Jakarta, '+fmt(w.tgl)+'</p><p>Hormat Kami,</p><p>PT Vgreen Global Charging Station Investment Indonesia</p><div class="ttd"></div>'+
+   '<p><b>'+esc(w.ttd)+'</b><br>'+esc(w.jab)+'</p>'+lamp+'</div>';
+}
+function show(ws){
+  var s=$("sheet");
+  s.innerHTML='<div class="noprint bar"><button class="main" onclick="window.print()">Cetak / Simpan PDF ('+ws.length+' surat)</button><button onclick="closeSheet()">Tutup</button><span>Di dialog cetak pilih "Save as PDF" dan aktifkan "Background graphics".</span></div><div class="paper">'+
+    ws.map(letter).join("")+
+    '<div class="foot">Graha Binakarsa Lantai 7, Jl H.R Rasuna Said Kav C-18 RT 002 RW 005, Karet Kuningan, Kecamatan Setiabudi<br>Kota Jakarta Selatan, DKI Jakarta 12940</div></div>';
+  s.classList.add("on");s.scrollTop=0;
+}
+function closeSheet(){$("sheet").classList.remove("on")}
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet()});
+
+/* ===== Station code untuk SAP ===== */
+var sapOut=[],sapBad=[];
+function sapShow(msg){var e=$("sapInfo");e.textContent=msg;e.classList.remove("hide")}
+$("sapFile").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  if(typeof XLSX==="undefined"){sapShow("Pustaka Excel gagal dimuat. Cek koneksi internet lalu muat ulang halaman.");return}
+  var rd=new FileReader();
+  rd.onload=async function(){
+    try{await syncStations()}catch(x){}
+    try{
+      var wb=XLSX.read(rd.result,{type:"array"});
+      var res=buildFromRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:"",raw:false}),{sap:true});
+      sapOut=res.out;sapBad=res.bad;
+      var nb=sapOut.filter(function(x){return x.isNew}).length;
+      sapShow(sapOut.length+" site diproses: "+(sapOut.length-nb)+" memakai kode yang sudah ada, "+nb+" dibuatkan kode baru."+(sapBad.length?" "+sapBad.length+" baris dilewati: "+sapBad.join("; "):"")+(nb?" Kode baru baru dicadangkan setelah kamu klik Unduh Excel dan simpan kode baru.":""));
+      $("sapRows").innerHTML=sapOut.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(r.s.site_name)+'</td><td>'+esc(r.jt||"")+'</td><td>'+esc(r.s.provinsi)+'</td><td>'+esc(r.s.station_code)+'</td><td class="pc">'+esc(r.s.profit_center)+'</td><td>'+esc(r.note)+'</td></tr>'}).join("");
+      $("sapTbl").classList.toggle("hide",!sapOut.length);$("sapXls").classList.toggle("hide",!sapOut.length);
+    }catch(x){sapShow("File tidak bisa dibaca. Pastikan memakai template yang disediakan.")}
+    e.target.value="";
+  };
+  rd.readAsArrayBuffer(f);
+};
+$("sapXls").onclick=async function(){
+  if(!sapOut.length)return;
+  var fresh=sapOut.filter(function(r){return r.isNew}),add=fresh.length;
+  try{await persistStations(fresh.map(function(r){return r.s}))}catch(e){sapShow(await saveFailText(e));return}
+  fresh.forEach(function(r){r.isNew=false;r.note=r.note.replace(/^Baru/,"Baru (tersimpan)")});
+  if(add)drawNew();
+  var head=["Site Name","Jenis Station","Provinsi","Station Code","Profit Center","Status","Kota","Alamat Lengkap","GMaps"];
+  var aoa=[head].concat(sapOut.map(function(r){return[r.s.site_name,r.jt||"",r.s.provinsi,r.s.station_code,r.s.profit_center,r.note,r.s.city,r.s.address,r.s.gmaps]}));
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),"Hasil");
+  if(sapBad.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Baris dilewati"]].concat(sapBad.map(function(x){return[x]}))),"Dilewati");
+  XLSX.writeFile(wb,"station-code-sap.xlsx");
+  sapShow("File diunduh. "+(add?add+(DBMODE?" kode baru sudah disimpan ke database. ":" kode baru sudah dicadangkan dan masuk ke daftar site baru di bawah, tambahkan ke stations.csv. "):"")+"Tabel di bawah menunjukkan isi file.");
+  $("sapRows").innerHTML=sapOut.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(r.s.site_name)+'</td><td>'+esc(r.jt||"")+'</td><td>'+esc(r.s.provinsi)+'</td><td>'+esc(r.s.station_code)+'</td><td class="pc">'+esc(r.s.profit_center)+'</td><td>'+esc(r.note)+'</td></tr>'}).join("");
+};
+
+/* ===== Riwayat ===== */
+function hist(){
+  setTimeout(function(){if(typeof renderDash==="function")renderDash()},0);
+  var l=loadWO();$("histEmpty").classList.toggle("hide",l.length>0);
+  $("hist").innerHTML=l.map(function(w,i){return '<tr data-i="'+i+'"><td>'+esc(w.no)+'</td><td>'+esc(w.vendor)+'</td><td>'+w.lines.length+'</td><td>'+w.batal.length+'</td><td>'+esc(fmt(w.tgl))+
+    '</td><td><button class="sm" data-a="open">Buka</button> <button class="sm" data-a="csv">CSV</button> <button class="sm" data-a="del">Hapus</button></td></tr>'}).join("");
+}
+function dl(name,csv){var el=document.createElement("a");el.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv"}));el.download=name;el.click()}
+function q(x){return '"'+String(x==null?"":x).replace(/"/g,'""')+'"'}
+$("hist").addEventListener("click",async function(e){
+  var a=e.target.dataset.a;if(!a)return;
+  var all=loadWO(),i=e.target.closest("tr").dataset.i,w=all[i];
+  if(a==="open")show([w]);
+  if(a==="del"&&confirm("Hapus surat "+w.no+" dari riwayat?")){
+    if(DBMODE){
+      var dr=await sb.from("work_orders").delete().eq("id",w.id).select();
+      if(dr.error||!dr.data.length){alert("Surat hanya bisa dihapus oleh orang yang membuatnya.");return}
+    }
+    all.splice(i,1);saveWO(all);hist()
+  }
+  if(a==="csv"){
+    var h=["no_wo","status","station_code","profit_center","project_name","site_name","city","gmaps","machine_type","alasan_batal"];
+    var rows=w.lines.map(function(s){return[w.no,"Open",s.station_code,s.profit_center,s.project_name,s.site_name,s.city,s.gmaps,s.machine_type,""]})
+      .concat(w.batal.map(function(b){var s=b.s;return[w.no,"Cancelled",s.station_code,s.profit_center,s.project_name,s.site_name,s.city,s.gmaps,s.machine_type,b.alasan]}));
+    dl(w.no.replace(/\//g,"-")+".csv",[h.join(",")].concat(rows.map(function(r){return r.map(q).join(",")})).join("\n"));
+  }
+});
+
+/* ===== Site baru satuan ===== */
+function fillProv(){
+  var o='<option value="">Pilih provinsi</option>'+provs.map(function(p,i){return '<option value="'+i+'">'+esc(p[0])+' ('+p[2]+', '+p[3]+')</option>'}).join("");
+  $("nProv").innerHTML=o;$("fProv").innerHTML=o;
+}
+fetch("provinces.csv").then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){
+  var x=parseCSV(t,"provinsi").map(function(r){return[r.provinsi,r.provinsi_eng,r.kode_sc,r.kode_pc]});
+  if(x.length)provs=x;
+}).catch(function(){}).then(fillProv);
+function genNew(){
+  var p=provs[$("nProv").value];if(!p)return null;
+  return genCode($("nJenis").value,p,$("nY").value);
+}
+function preview(){
+  var g=genNew();$("nSC").value=g?g.sc:"";$("nPC").value=g?g.pc:"";
+  $("nCount").textContent="Data yang terbaca: "+stations.length+" baris. Nomor urut hanya benar kalau stations.csv berisi semua kode yang sudah ada.";
+}
+["nProv","nJenis","nY"].forEach(function(i){$(i).addEventListener("change",preview)});
+$("bNew").onclick=async function(){
+  $("newCard").classList.remove("hide");
+  try{await syncStations()}catch(x){}
+  if(!$("nSite").value&&lastMiss.length)$("nSite").value=lastMiss[0];
+  preview();$("newCard").scrollIntoView({behavior:"smooth"});
+};
+$("nClose").onclick=function(){$("newCard").classList.add("hide")};
+function nfail(m){var e=$("nErr");e.textContent=m;e.classList.remove("hide")}
+$("nSave").onclick=async function(){
+  var site=$("nSite").value.trim();
+  if(!site)return nfail("Isi nama site dulu.");
+  try{await syncStations()}catch(x){}
+  var g=genNew();
+  if(!g)return nfail("Pilih provinsi dulu.");
+  var s={station_code:g.sc,profit_center:g.pc,project_name:$("nProj").value.trim()||site,site_name:site,address:$("nAddr").value.trim(),
+    city:$("nCity").value.trim(),gmaps:$("nGmaps").value.trim(),machine_type:$("nMach").value.trim(),power:$("nPower").value.trim(),
+    pic:$("nPic").value.trim(),bd_pic:$("nBd").value.trim(),latitude:"",longitude:"",provinsi:provs[$("nProv").value][0],epc:""};
+  try{await persistStations([s])}catch(e){return nfail(await saveFailText(e))}
+  var sv=stations.filter(function(x){return x.station_code===s.station_code}).pop();
+  lines.push({s:sv,vendor:$("vendor").value.trim(),wo:$("jenis").value,isNew:false,note:"Baru",coords:parseCoord(s.gmaps),v:"",alasan:""});
+  showInfo(lines.length+" baris di daftar. Site baru "+site+" mendapat station code "+g.sc+" dan profit center "+g.pc+". Vendor dan jenis WO diambil dari bagian cari manual.");
+  if(cur<0)setCur(0);else draw();
+  ["nSite","nProj","nAddr","nCity","nGmaps","nPic","nBd"].forEach(function(i){$(i).value=""});
+  $("nErr").classList.add("hide");preview();drawNew();
+};
+
+/* ===== Koreksi provinsi: nomor urut tetap, hanya kode provinsi (SC) dan kode lokasi (PC) berubah ===== */
+$("bFix").onclick=function(){go("fix")};
+$("fClose").onclick=function(){go("wo")};
+$("fFind").onclick=async function(){
+  try{await syncStations()}catch(x){}
+  var code=$("fOld").value.trim().toUpperCase(),info=$("fInfo");
+  fixOld=null;$("fOk").classList.add("hide");info.classList.remove("hide");
+  var m=SCRE.exec(code);
+  if(!m){info.textContent="Format station code tidak dikenal. Contoh yang benar: L.E.CJA1568 atau B.JKT02335.";fixPreview();return}
+  var hit=stations.filter(function(s){return s.station_code.toUpperCase()===code});
+  if(!hit.length){info.textContent="Station code "+code+" tidak ada di data.";fixPreview();return}
+  var s=hit[hit.length-1],ok=provs.some(function(p){return p[2]===m[2].toUpperCase()});
+  fixOld={s:s,m:m};
+  info.textContent=s.site_name+" | kode provinsi sekarang: "+m[2].toUpperCase()+(ok?"":" (tidak ada di daftar provinsi)")+" | nomor urut: "+m[3]+" | profit center: "+(s.profit_center||"kosong");
+  fixPreview();
+};
+// Hitung kode hasil koreksi provinsi. Nomor urut tetap, hanya kode provinsi (SC) dan kode lokasi (PC) yang berubah.
+function fixCompute(s,m,p,extra){
+  var j=typeOf(m),pre=j==="EVCS"?"L.E.":"B.",num=m[3];
+  if(p[2]===m[2].toUpperCase())return{same:true};
+  var sc=pre+p[2]+num;
+  var holder=stations.concat(extra||[]).filter(function(x){return x.station_code.toUpperCase()===sc})[0];
+  if(holder){
+    if(norm(holder.site_name)===norm(s.site_name))return{done:true,sc:holder.station_code,pc:holder.profit_center,prov:p[0]};
+    return{conflict:holder,sc:sc};
+  }
+  var old=s.profit_center||"",y="3",z=j==="EVCS"?"0"+num.slice(-4):num.padStart(5,"0");
+  if(/^\d{4}\d[0-9A-Z]{5}$/.test(old)){y=old[4];z=old.slice(5)}
+  var pc=freePC((j==="EVCS"?"48":"49")+p[3]+y+z,extra);
+  if(!pc)return{nopc:true};
+  return{sc:sc,pc:pc,prov:p[0]};
+}
+function fixCalc(){
+  var p=provs[$("fProv").value];if(!fixOld||!p)return null;
+  var c=fixCompute(fixOld.s,fixOld.m,p);
+  if(c.same)return{err:"Provinsi yang dipilih sama dengan kode provinsi sekarang."};
+  if(c.done)return{err:"Kode yang benar sudah ada: "+c.sc+" (profit center "+c.pc+"). Tidak perlu dikoreksi lagi."};
+  if(c.conflict)return{err:"Kode "+c.sc+" sudah dipakai oleh "+c.conflict.site_name+". Nomor yang sama sudah ada di provinsi tujuan, jadi tidak bisa diterapkan otomatis."};
+  if(c.nopc)return{err:"Profit center hasil koreksi sudah dipakai semua variasinya (A sampai Z)."};
+  return c;
+}
+function fixPreview(){
+  var c=fixCalc(),e=$("fErr");
+  $("fSC").value=c&&c.sc||"";$("fPC").value=c&&c.pc||"";
+  if(c&&c.err){e.textContent=c.err;e.classList.remove("hide")}else e.classList.add("hide");
+}
+$("fProv").addEventListener("change",fixPreview);
+$("fSave").onclick=async function(){
+  $("fOk").classList.add("hide");
+  if(!fixOld){var e=$("fErr");e.textContent="Cari station code yang mau dikoreksi dulu.";e.classList.remove("hide");return}
+  try{await syncStations()}catch(x){}
+  var c=fixCalc();
+  if(!c){var e2=$("fErr");e2.textContent="Pilih provinsi yang benar dulu.";e2.classList.remove("hide");return}
+  if(c.err){fixPreview();return}
+  var row=Object.assign({},fixOld.s,{station_code:c.sc,profit_center:c.pc,provinsi:c.prov});
+  try{
+    await persistStations([row]);
+    await persistFixes([{lama:fixOld.s.station_code,baru:c.sc,pc_lama:fixOld.s.profit_center,pc_baru:c.pc,provinsi:c.prov,site:fixOld.s.site_name}]);
+  }catch(e){var e3=$("fErr");e3.textContent=await saveFailText(e);e3.classList.remove("hide");return}
+  var o=$("fOk");o.textContent="Dibuat: "+fixOld.s.station_code+" menjadi "+c.sc+", profit center "+c.pc+". Baris lama tidak diubah.";o.classList.remove("hide");
+  fixOld=null;$("fOld").value="";$("fInfo").classList.add("hide");$("fSC").value="";$("fPC").value="";$("fErr").classList.add("hide");
+  drawNew();
+};
+
+/* Koreksi massal lewat template */
+var fixOut=[];
+function fixBulk(rows){
+  var extra=[],out=[];
+  rows.forEach(function(r){
+    var g=function(){return rowGet(r,Array.prototype.slice.call(arguments))};
+    var code=g("station code").toUpperCase(),site=g("site name","nama site"),pt=g("provinsi");
+    if(!code&&!site&&!pt)return;
+    var res={lama:code,site:site,prov:pt,pc_lama:"",baru:"",pc_baru:"",status:"",ok:false};
+    var pi=findProv(pt);
+    if(pi<0){res.status="Provinsi benar kosong atau tidak dikenali";out.push(res);return}
+    var p=provs[pi],old=null;res.prov=p[0];
+    if(code)old=stations.filter(function(x){return x.station_code.toUpperCase()===code}).pop();
+    else if(site){
+      var jt=/bss/i.test(g("jenis station"))?"BSS":(/evcs|ev/i.test(g("jenis station"))?"EVCS":"");
+      var cand=stations.filter(function(x){var m=SCRE.exec(x.station_code);return m&&(!jt||typeOf(m)===jt)&&norm(x.site_name)===norm(site)});
+      old=cand.filter(function(x){return SCRE.exec(x.station_code)[2].toUpperCase()!==p[2]}).pop()||cand.pop();
+    }
+    if(!old){res.status="Station code atau nama site tidak ditemukan";out.push(res);return}
+    var m=SCRE.exec(old.station_code);
+    res.lama=old.station_code;res.site=old.site_name;res.pc_lama=old.profit_center;
+    if(!m){res.status="Format station code tidak dikenal";out.push(res);return}
+    var c=fixCompute(old,m,p,extra);
+    if(c.same){res.status="Sudah benar (provinsi sama)";res.baru=old.station_code;res.pc_baru=old.profit_center}
+    else if(c.done){res.status="Kode benar sudah ada";res.baru=c.sc;res.pc_baru=c.pc}
+    else if(c.conflict){res.status="Bentrok: "+c.sc+" dipakai oleh "+c.conflict.site_name}
+    else if(c.nopc)res.status="Profit center penuh (A sampai Z)";
+    else{res.status="Siap dikoreksi";res.baru=c.sc;res.pc_baru=c.pc;res.ok=true;res.old=old;extra.push({station_code:c.sc,profit_center:c.pc,site_name:old.site_name})}
+    out.push(res);
+  });
+  return out;
+}
+function fixDraw(){
+  $("fixRows").innerHTML=fixOut.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(r.site)+'</td><td>'+esc(r.lama)+'</td><td>'+esc(r.prov)+'</td><td>'+esc(r.baru)+'</td><td class="pc">'+esc(r.pc_lama)+'</td><td class="pc">'+esc(r.pc_baru)+'</td><td>'+esc(r.status)+'</td></tr>'}).join("");
+  $("fixTbl").classList.toggle("hide",!fixOut.length);$("fixXls").classList.toggle("hide",!fixOut.length);
+}
+function fixMsg(m){var e=$("fixInfo");e.textContent=m;e.classList.remove("hide")}
+$("fixFile").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  if(typeof XLSX==="undefined"){fixMsg("Pustaka Excel gagal dimuat. Cek koneksi internet lalu muat ulang halaman.");return}
+  var rd=new FileReader();
+  rd.onload=async function(){
+    try{await syncStations()}catch(x){}
+    try{
+      var wb=XLSX.read(rd.result,{type:"array"});
+      fixOut=fixBulk(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:"",raw:false}));
+      var n=fixOut.filter(function(x){return x.ok}).length;
+      fixMsg(fixOut.length+" baris diproses: "+n+" siap dikoreksi, "+(fixOut.length-n)+" tidak perlu atau tidak bisa dikoreksi (lihat kolom Status). Kode baru baru dicadangkan setelah klik Unduh Excel dan simpan koreksi.");
+      fixDraw();
+    }catch(x){fixMsg("File tidak bisa dibaca. Pastikan memakai template koreksi.")}
+    e.target.value="";
+  };
+  rd.readAsArrayBuffer(f);
+};
+$("fixXls").onclick=async function(){
+  if(!fixOut.length)return;
+  var todo=fixOut.filter(function(r){return r.ok}),n=todo.length;
+  try{
+    await persistStations(todo.map(function(r){return Object.assign({},r.old,{station_code:r.baru,profit_center:r.pc_baru,provinsi:r.prov})}));
+    await persistFixes(todo.map(function(r){return{lama:r.lama,baru:r.baru,pc_lama:r.pc_lama,pc_baru:r.pc_baru,provinsi:r.prov,site:r.site}}));
+  }catch(e){fixMsg(await saveFailText(e));return}
+  todo.forEach(function(r){r.ok=false;r.status="Dikoreksi (tersimpan)"});
+  if(n)drawNew();
+  var head=["Station Code Lama","Station Code Baru","Profit Center Lama","Profit Center Baru","Provinsi Benar","Site Name","Status"];
+  var aoa=[head].concat(fixOut.map(function(r){return[r.lama,r.baru,r.pc_lama,r.pc_baru,r.prov,r.site,r.status]}));
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),"Koreksi");
+  XLSX.writeFile(wb,"koreksi-provinsi.xlsx");
+  fixMsg("File diunduh. "+(n?n+(DBMODE?" kode hasil koreksi sudah disimpan ke database. ":" kode hasil koreksi sudah dicadangkan dan masuk ke daftar di bawah, tambahkan ke stations.csv. "):"")+"Kode lama tidak diubah.");
+  fixDraw();
+};
+
+function drawNew(){
+  setTimeout(function(){if(typeof renderDash==="function")renderDash()},0);
+  var l=localNew(),f=localFix(),fm={};f.forEach(function(x){fm[x.baru]=x.lama});
+  $("newList").classList.toggle("hide",!l.length);
+  $("newRows").innerHTML=l.map(function(s){return '<tr><td>'+esc(s.station_code)+'</td><td class="pc">'+esc(s.profit_center)+'</td><td>'+esc(s.site_name)+'</td><td>'+esc(s.city)+'</td><td>'+(fm[s.station_code]?"Koreksi dari "+esc(fm[s.station_code]):"Site baru")+'</td></tr>'}).join("");
+}
+$("nCsv").onclick=function(){
+  var k=["station_code","profit_center","project_name","site_name","address","city","gmaps","machine_type","power","pic","bd_pic","latitude","longitude","provinsi","epc"];
+  dl("site-baru.csv",localNew().map(function(s){return k.map(function(c){return q(s[c])}).join(",")}).join("\n"));
+};
+$("fCsv").onclick=function(){
+  var k=["lama","baru","pc_lama","pc_baru","provinsi","site"];
+  dl("pemetaan-koreksi.csv",["kode_lama,kode_baru,pc_lama,pc_baru,provinsi_baru,site"].concat(localFix().map(function(x){return k.map(function(c){return q(x[c])}).join(",")})).join("\n"));
+};
+$("nClear").onclick=function(){if(confirm("Kosongkan daftar ini di browser? Pastikan barisnya sudah masuk ke stations.csv.")){saveNew([]);saveFix([]);drawNew()}};
+
+/* ===== Navigasi dan dashboard ===== */
+var VIEWS=["dash","wo","sap","fix","hist"];
+function go(v){
+  if(VIEWS.indexOf(v)<0)v="dash";
+  VIEWS.forEach(function(x){$("v-"+x).classList.toggle("on",x===v)});
+  Array.prototype.forEach.call($("nav").children,function(b){b.classList.toggle("on",b.dataset.v===v)});
+  try{history.replaceState(null,"","#"+v)}catch(e){}
+  window.scrollTo(0,0);
+}
+$("nav").addEventListener("click",function(e){var b=e.target.closest("button");if(b)go(b.dataset.v)});
+var provCache={};
+function provIdx(n){var k=n||"";if(!(k in provCache))provCache[k]=findProv(k);return provCache[k]}
+function fmtN(n){return Number(n).toLocaleString("id-ID")}
+function bars(el,rows,cls,emptyMsg){
+  if(!rows.length){el.innerHTML='<div class="empty">'+esc(emptyMsg||"Belum ada data.")+'</div>';return}
+  var max=Math.max.apply(null,rows.map(function(r){return r.e+r.b}))||1;
+  el.innerHTML=rows.map(function(r){
+    var tot=r.e+r.b,seg=cls?'<i style="flex:'+tot+'"></i>':(r.e?'<i class="seg e" style="flex:'+r.e+'"></i>':'')+(r.b?'<i class="seg b" style="flex:'+r.b+'"></i>':'');
+    return '<div class="hb"><span class="lbl" title="'+esc(r.label)+'">'+esc(r.label)+'</span><span class="trk"><span class="bar'+(cls?" "+cls:"")+'" style="width:'+(tot/max*100).toFixed(1)+'%">'+seg+'</span></span><span class="val">'+fmtN(tot)+'</span></div>';
+  }).join("");
+}
+function topN(obj,n,two){
+  return Object.keys(obj).map(function(k){var v=obj[k];return two?{label:k,e:v.e,b:v.b}:{label:k,e:v,b:0}})
+    .sort(function(a,b){return(b.e+b.b)-(a.e+a.b)}).slice(0,n);
+}
+var TILE={ACE:[0,0],NSM:[1,1],WSM:[1,2],RIA:[2,2],RIL:[3,1],JAM:[2,3],BKL:[1,3],SSM:[2,4],BBI:[3,3],LMP:[2,5],BAN:[3,6],JKT:[4,6],WJA:[5,6],CJA:[6,6],YOG:[7,6],EJA:[8,6],BAL:[9,6],WNT:[10,6],ENT:[11,6],WKA:[5,2],CKA:[6,2],EKA:[7,2],NKA:[7,1],SKA:[6,3],GTO:[9,1],NSL:[10,1],CSL:[9,2],WSL:[8,3],SSL:[9,3],SSE:[10,3],NML:[12,1],MLK:[12,3],SWP:[13,1],WPP:[14,1],PAP:[16,1],CPA:[15,2],HLP:[16,2],SOP:[16,3]};
+var tileMode="count",byC={};
+function drawTiles(){
+  var max=1;Object.keys(byC).forEach(function(k){max=Math.max(max,byC[k].n)});
+  var names={};provs.forEach(function(p){names[p[2]]=p[0]});
+  $("tileMap").innerHTML=Object.keys(TILE).map(function(c){
+    var s=byC[c]||{n:0,mis:0,e:0,b:0},pos=TILE[c],bg,dk,line;
+    if(tileMode==="count"){var t=s.n?Math.sqrt(s.n/max):0;bg="rgba(43,76,126,"+(0.07+0.93*t).toFixed(2)+")";dk=t>0.5;line=s.n?fmtN(s.n):"-"}
+    else{var r=s.n?s.mis/s.n:0;bg="rgba(255,90,20,"+(0.07+0.93*r).toFixed(2)+")";dk=r>0.55;line=s.n?Math.round(r*100)+"%":"-"}
+    return '<div class="tile'+(dk?" dk":"")+(s.n?"":" z")+'" style="grid-column:'+(pos[0]+1)+';grid-row:'+(pos[1]+1)+';background:'+(s.n?bg:"#fff")+'" title="'+esc((names[c]||c)+": "+fmtN(s.n)+" station (EVCS "+fmtN(s.e)+", BSS "+fmtN(s.b)+"), kode tidak cocok "+fmtN(s.mis))+'"><b>'+c+'</b><span>'+line+'</span></div>';
+  }).join("");
+  $("tileScale").innerHTML=tileMode==="count"?
+    '<span>sedikit</span><i style="background:linear-gradient(90deg,rgba(43,76,126,.07),rgba(43,76,126,1))"></i><span>banyak (maks '+fmtN(max)+')</span>':
+    '<span>0%</span><i style="background:linear-gradient(90deg,rgba(255,90,20,.07),rgba(255,90,20,1))"></i><span>100% kode tidak cocok dengan provinsi</span>';
+}
+$("v-dash").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-m]");if(!b)return;
+  tileMode=b.dataset.m;
+  Array.prototype.forEach.call(b.parentNode.children,function(x){x.classList.toggle("on",x===b)});
+  drawTiles();
+});
+function renderDash(){
+  var n=stations.length,ev=0,bs=0,byP={},byE={},mis=0,misBy={},cnt={},nm={};
+  byC={};
+  stations.forEach(function(s){
+    var m=SCRE.exec(s.station_code),j=m?typeOf(m):"";
+    if(j==="BSS")bs++;else if(j==="EVCS")ev++;
+    var pi=provIdx(s.provinsi),pn=pi>=0?provs[pi][0]:"Tidak dikenali";
+    var o=byP[pn]||(byP[pn]={e:0,b:0});if(j==="BSS")o.b++;else o.e++;
+    var bad=m&&pi>=0&&provs[pi][2]!==m[2].toUpperCase();
+    if(bad){mis++;misBy[pn]=(misBy[pn]||0)+1}
+    if(pi>=0){var c=provs[pi][2],q=byC[c]||(byC[c]={n:0,e:0,b:0,mis:0});q.n++;if(j==="BSS")q.b++;else q.e++;if(bad)q.mis++}
+    if(s.epc)byE[s.epc]=(byE[s.epc]||0)+1;
+    cnt[s.station_code]=(cnt[s.station_code]||0)+1;
+    var k=(j||"?")+"|"+norm(s.site_name);(nm[k]||(nm[k]={}))[s.station_code]=1;
+  });
+  var dup=0,multi=0;
+  Object.keys(cnt).forEach(function(k){if(cnt[k]>1)dup++});
+  Object.keys(nm).forEach(function(k){if(Object.keys(nm[k]).length>1)multi++});
+  var wos=loadWO(),nn=localNew().length,provN=Object.keys(byC).length;
+  $("tb").innerHTML=
+    '<div><div class="k">Station code</div><div class="n">'+fmtN(n)+'</div><div class="s">EVCS '+fmtN(ev)+' dan BSS '+fmtN(bs)+'</div></div>'+
+    '<div><div class="k">Provinsi</div><div class="n">'+fmtN(provN)+'</div><div class="s">dari 38 provinsi punya station</div></div>'+
+    '<div><div class="k">Surat WO</div><div class="n">'+fmtN(wos.length)+'</div><div class="s">'+(DBMODE?"sudah dibuat oleh semua pengguna":"sudah dibuat di browser ini")+'</div></div>'+
+    '<div><div class="k">'+(DBMODE?"Dibuat di Patok":"Menunggu")+'</div><div class="n">'+fmtN(nn)+'</div><div class="s">'+(DBMODE?"kode baru dan koreksi, tersimpan di database":"kode baru atau koreksi belum masuk stations.csv")+'</div></div>'+
+    '<div class="meta"><span>sumber <b>'+(DBMODE?"database":"stations.csv")+'</b></span><span>baris <b>'+fmtN(n)+'</b></span><span>dimuat <b>'+new Date().toLocaleString("id-ID")+'</b></span></div>';
+  drawTiles();
+  bars($("chProv"),topN(byP,12,true),"","Data station belum dimuat.");
+  $("qm").innerHTML=n?
+    '<div class="qm"><b class="'+(mis?"warn":"")+'">'+fmtN(mis)+'</b><span>kode provinsi di station code tidak cocok dengan provinsinya ('+(mis/n*100).toFixed(1)+'% baris)</span>'+
+    '<b>'+fmtN(dup)+'</b><span>station code dipakai lebih dari satu baris</span>'+
+    '<b>'+fmtN(multi)+'</b><span>nama site punya lebih dari satu station code</span></div>':'<div class="empty">Data station belum dimuat.</div>';
+  bars($("chMis"),topN(misBy,8,false),"bad","Tidak ada kode provinsi yang tidak cocok.");
+  bars($("chEpc"),topN(byE,10,false),"one","Kolom EPC belum ada di data station.");
+  var bv={};wos.forEach(function(w){bv[w.vendor]=(bv[w.vendor]||0)+w.lines.length});
+  bars($("chWo"),topN(bv,10,false),"one","Belum ada surat WO. Terisi setelah surat dibuat.");
+  var bd=$("navBadge");bd.textContent=nn;bd.classList.toggle("hide",!nn||DBMODE);
+}
+
+hist();
+go((location.hash||"").slice(1));renderDash();
+
+/* ===== Login dan mulai (mode database) ===== */
+function showLogin(){$("login").classList.remove("hide");$("who").classList.add("hide")}
+async function startApp(session){
+  userId=session.user.id;$("whoMail").textContent=session.user.email;$("who").classList.remove("hide");$("login").classList.add("hide");
+  try{
+    $("stMsg").textContent="Memuat data station dari database...";
+    var rows=await dbLoadStations(function(a,b){$("stMsg").textContent="Memuat data station dari database: "+fmtN(a)+" dari "+fmtN(b)+" baris..."});
+    stations=prep(rows);lastId=0;stations.forEach(function(s){if(s.id>lastId)lastId=s.id});
+    var v=await sb.from("vendors").select("name").order("name");
+    vendors=(v.data||[]).map(function(x){return x.name});fillVendors();
+    var f=await sb.from("fixes").select("*").order("id");FIXES=f.data||[];
+    await dbLoadWOs();
+    $("stMsg").textContent="Data station dimuat dari database: "+fmtN(stations.length)+" baris.";
+    var nm=$("newList").querySelector(".msg");
+    if(nm)nm.textContent="Kode ini tersimpan di database dan langsung terlihat oleh semua pengguna. Tombol unduh hanya untuk salinan.";
+    drawNew();hist();autoSeq();renderDash();
+  }catch(e){$("stMsg").textContent="Gagal memuat dari database: "+(e.message||e)}
+}
+if(DBMODE){
+  $("lgBtn").onclick=async function(){
+    var er=$("lgErr");er.classList.add("hide");
+    var r=await sb.auth.signInWithPassword({email:$("lgEmail").value.trim(),password:$("lgPass").value});
+    if(r.error){er.textContent="Email atau kata sandi salah.";er.classList.remove("hide");return}
+    $("lgPass").value="";startApp(r.data.session);
+  };
+  $("lgPass").addEventListener("keydown",function(ev){if(ev.key==="Enter")$("lgBtn").click()});
+  $("logout").onclick=async function(){await sb.auth.signOut();location.reload()};
+  sb.auth.getSession().then(function(r){if(r.data&&r.data.session)startApp(r.data.session);else showLogin()});
+}else if(CFG.url&&CFG.anonKey){
+  setTimeout(function(){$("stMsg").textContent="Pustaka database gagal dimuat, jadi aplikasi memakai data lokal sementara. Cek koneksi internet lalu muat ulang halaman."},1500);
+}
+</script>
+</body>
+</html>
